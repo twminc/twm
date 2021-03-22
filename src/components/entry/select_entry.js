@@ -51,9 +51,9 @@ export default class SelectEntry extends React.Component {
             console.error("error at reading legacy wallet");
         }
         try {
-            let api_info = await get_api_info('http://stageapi.theworldmarketplace.com:17700');
-            if (api_info.wallet_version !== '0.1.9') {
-                alert(`there is a newer version of the wallet you are on version 0.1.8, the api version is ${api_info.wallet_version}`);
+            let api_info = await get_api_info('https://api.theworldmarketplace.com');
+            if (api_info.wallet_version !== '1.0.0') {
+                alert(`there is a newer version of the wallet you are on version 1.0.0, the current wallet version is ${api_info.wallet_version}`);
                 alert(api_info.update_message);
             }
         } catch(err) {
