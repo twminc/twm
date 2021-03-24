@@ -1458,8 +1458,8 @@ class WalletHome extends React.Component {
         try {
             let mixins = e.target.mixins.value - 1;
             if (mixins >= 0) {
-                let confirmed = window.confirm(`Are you sure you want to stake ${stake_is.tokenStaked / 10000000000} SFT Safex Tokens, 
-                from height: ${stake_is.blockHeight}, and collect ${stake_is.collectedInterest} SFX`);
+                let confirmed = window.confirm(`Are you sure you want to unstake ${stake_is.tokenStaked / 10000000000} SFT Safex Tokens, 
+                from height: ${stake_is.blockHeight}, and collect ${stake_is.collectedInterest / 10000000000} SFX`);
                 console.log(confirmed);
                 if (confirmed) {
                     try {
@@ -1539,7 +1539,7 @@ class WalletHome extends React.Component {
                                         transaction id: ${this.state.unstake_txn_id}
                                         amount: ${this.state.unstake_txn_amount} SFT
                                         fee: ${this.state.unstake_txn_fee / 10000000000} SFX`);
-                        let token_stakes = wallet.getMyStakes();
+                        let token_stakes = wallet.getMyStake();
                         this.setState({token_stakes: token_stakes});
                         resolve(res);
                     }
@@ -2590,13 +2590,19 @@ class WalletHome extends React.Component {
     purchase_item = async (e, listing) => {
         e.preventDefault();
         e.persist();
+        console.log(JSON.stringify(listing));
         console.log(this.state.show_purchase_offer);
 
         let quant = e.target.quantity.value;
 
+        //if the listing quantity > 0 //
         var va = e.target;
         let mixins = e.target.mixins.value - 1;
-        if (e.target.quantity.value > 0) {
+        if (listing.quantity < 1) {
+            alert(`there is no quantity left to buy`)
+        } else {
+
+        if (e.target.quantity.value <= listing.quantity) {
 
             console.log(listing);
             console.log(e.target.quantity.value);
@@ -2961,6 +2967,8 @@ class WalletHome extends React.Component {
             }
         } else {
             alert(`You can not have 0 quantity for purchase.`);
+        }
+
         }
     };
 
@@ -3503,7 +3511,7 @@ class WalletHome extends React.Component {
                                         size={20} 
                                         onClick={()=> this.setState({show_modal_for_image: null})} />
                                                     <div className="mt-4">
-                                                        <img src={this.state.show_modal_for_image} />
+                                                        <img style={{maxHeight: '90vh', maxWidth: '95%'}} src={this.state.show_modal_for_image} />
                                                     </div>
                                             </ReactModal>
                                               </div>
