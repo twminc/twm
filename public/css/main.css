@@ -1,0 +1,222 @@
+/* HTML Elements CSS Start */
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        word-wrap: break-word
+    }
+
+    .vl {
+        border-left: 2px solid white;
+        height: auto;
+      }
+
+/* HTML Elements CSS End */
+
+/* Colours */
+
+
+
+/* Dimensions CSS Start */
+
+    .w50 {
+        width: 50%!important;
+    }
+    .font-size-medium {
+        font-size: 1.8rem!important;
+    }
+
+    .font-size-small {
+        font-size: 1.25rem!important;
+    }
+
+    .no-padding {
+        padding: 0px!important;
+    }
+
+    .oflow-y-scroll {
+        overflow-y: scroll;
+    }
+
+    .oflow-y-auto {
+        overflow-y: auto;
+    }
+
+    .overflow-x {
+        overflow-x: auto!important;
+    }
+
+    .height100v {
+        height: 100vh;
+    }
+
+    .height100 {
+        height: 100%;
+    }
+
+    .height-fit-content {
+        height: fit-content;
+    }
+
+    .height80 {
+        height: 80%!important;
+    }
+
+    .max-h500px {
+        max-height: 500px;
+    }
+
+    .width100 {
+        width: 100%;
+    }
+
+    .width-fit-content {
+        width: fit-content;
+    }
+
+    .auto_margin_50 {
+        width: 50%;
+        margin: auto;
+    }
+
+    .b-r25 {
+        border-radius: 25px;
+
+    }
+
+    .b-r10 {
+        border-radius: 10px;
+
+    }
+
+    .b-white-5 {
+        border: 5px!important;
+        border-color: #fff!important;
+    }
+
+    .ml-8 {
+        margin-left: 8rem!important;
+    }
+/* Dimensions CSS End */
+
+/* Attributes CSS Start */
+
+    .sticky {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .display-none {
+        display: none!important;
+    }
+
+    .text-align-center {
+        text-align: center!important;
+    }
+
+
+/* Attributes CSS End */
+
+
+/* Colors CSS Start */
+    :root {
+        --safex-cash-green: rgb(38, 232, 185);
+        --light-blue-gradient: linear-gradient(90deg, #13D3FD 0%, #13D3FD 100%);
+        --blue-box-shadow: 0px 0px 17px -8px rgba(19,211,253,1);
+        --green-box-shadow: 0px 0px 17px -8px rgba(84,233,183,1);
+    }
+
+
+
+    .blue-gradient-back {
+        background: linear-gradient(rgba(53,152,243,1), rgba(19,211,253,1));
+    }
+
+    .blue-gradient-back-opaque {
+        background: linear-gradient(rgba(53,152,243,.8), rgba(19,211,253,.8));
+    }
+
+
+    .light-blue-back {
+        background-color: rgba(24, 189, 231, 0.5);
+    }
+
+    .black-back {
+        background: linear-gradient(rgb(0, 0, 0), rgb(9, 51, 111));
+    }
+
+    .solid-grey-back {
+        background-color: rgba(219, 219, 219, 1);;
+    }
+
+    .opaque-black {
+        background: linear-gradient(rgb(0, 0, 0.5), rgba(9, 51, 111, .5));
+    }
+
+    .safex-cash-green {
+        background-color: rgb(38, 232, 185)!important;
+    }
+
+    .grey-back {
+        background: linear-gradient(rgba(110, 110, 110, 0.5), rgba(219, 219, 219, 0.5)); 
+    }
+
+    .safex-blue {
+        background: linear-gradient(rgb(9, 51, 111), rgb(41, 114, 216));
+    }
+
+    .white-text {
+        color: #fff!important;
+    }
+
+    .black-text {
+        color: #000!important;
+    }
+
+/* Colors CSS End */
+
+/* Custom Components Start */
+
+    .custom-button {
+        border-radius: 50px;
+    }
+
+    .custom-button:hover {
+        background-color: darkgray!important;
+    }
+
+    .home-main-div {
+        display: flex;
+        justify-content: start;
+    }
+
+/* Custom Components End */
+
+.products-table-row {
+    min-height: 50px;
+    align-items: center;
+    background-color: white;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #80808026;
+}
+
+.tx-row:nth-of-type(even){
+    background: lightblue;
+  }
+
+  .user-select-none {
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */      
+  }
+
+  .pointer {
+      cursor: pointer;
+  }
