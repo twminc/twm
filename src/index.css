@@ -1,0 +1,12 @@
+.tos-modal blockquote {
+    font-size: unset;
+}
+
+.tos-modal {
+    width: 500px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    box-shadow: 0 1px 14px -7px #7b7b7b;
+}

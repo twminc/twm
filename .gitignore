@@ -1,0 +1,8 @@
+node_modules
+build
+dist
+temp
+.DS_Store
+.ideapackage-lock.json
+package-lock.json
+user.json
