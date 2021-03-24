@@ -1,0 +1,74 @@
+.staking-table-box {
+    height: 20vh;
+    max-height: 600px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: var(--blue-box-shadow);
+}
+
+.staking-table-title {
+    height: 100%;
+    width: 6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, #3698F3 0%, #13D3FD 100%);
+    border-radius: 10px 0 0 10px;
+    color: white;
+    font-family: 'Inter';
+    font-size: 2.2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.staking-table-table {
+    height: 100%;
+    overflow: overlay;
+    padding: 2rem;
+}
+
+.staking-table-header {
+    position: sticky;
+    top: 0;
+}
+
+.staking-table-header, .staking-table-row {
+    width: 100%;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.staking-table-header > p {
+    width: 8rem;
+    padding: .1rem;
+    margin: 0;
+
+    border: 2px solid #13D3FD;
+    border-radius: 10px!important;
+    color: #767676;
+    background-color: white;
+}
+
+.staking-table-row {
+    width: 95%;
+    max-height: 10rem;
+    border: 2px solid #BDBDBD;
+    border-radius: 10px!important;
+    margin: 1rem auto!important;
+    padding: .25rem;
+    background-color:rgba(255, 255, 255, 0.9);
+    border: 2px solid #13D3FD;
+    text-align: center;
+    font-family: 'Inter';
+}
+
+.staking-table-row > p {
+    width: 8rem;
+    margin: 0;
+    
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #767676;
+}

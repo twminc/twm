@@ -1,0 +1,96 @@
+.merchant-tabs-box {
+    height: 50vh;
+    max-height: 600px;
+    width: 18vw;
+    border-radius: 10px;
+    padding: 2rem .5rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Inter';
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 500;
+    color: #767676;
+}
+
+.merchant-tab {
+    width: 100%;
+    height: 22.5%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 10px;
+    box-shadow: 0 1px 14px -7px #7b7b7b;
+    background-color: white;
+}
+
+.merchant-tab h1 {
+    width: 50%;
+
+    font-family: 'Inter';
+    font-size: 1.8rem;
+    font-style: normal;
+    font-weight: 500;
+    text-align: left;
+
+}
+
+.merchant-tab img {
+    height: 75px;
+    width: 75px;
+
+    border: 2px solid #13D0FD;
+}
+
+.mixins-label.cash {
+    width: 70%;
+    border: 3px solid #54E9B7;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.mixins-label.token {
+    width: 70%;
+    border: 3px solid #3698F3;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.custom-button-send {
+    width: 100%;
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 10px;
+    color:#fff;
+    padding: .5rem;
+}
+
+.custom-button-send.cash {
+    border: .5rem solid #93EB93;
+    border-radius: 10px;
+    background: linear-gradient(270deg, #54E9B7 0%, #93EB93 100%);
+}
+
+.custom-button-send.cash:hover {
+    background: linear-gradient(270deg, #93EB93 0%, #54E9B7 100%);
+    border: .5rem solid #54E9B7;
+}
+
+.custom-button-send.token {
+    border: .5rem solid #3698F3;
+    border-radius: 10px;
+    background: linear-gradient(270deg, #3698F3 0%, #13D0FD 100%);
+}
+
+.custom-button-send.token:hover {
+    background: linear-gradient(270deg, #13D0FD 0%, #3698F3 100%);
+    border: .5rem solid #3698F3;
+}
+

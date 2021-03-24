@@ -1,0 +1,17 @@
+.home-info-box {
+    max-height: 400px;
+    width: 75%;
+    overflow: auto;
+}
+
+.infinity {
+    animation: loading 2s infinite;
+  }
+
+
+  @keyframes loading /* Firefox */
+{
+0%   {color:#13D3FD;}
+50%  {color: #54E9B7; -webkit-text-stroke: .1px black;}
+100%   {color: #13D3FD;}
+}

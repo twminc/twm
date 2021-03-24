@@ -1,0 +1,76 @@
+.stake-token-box {
+    max-height: 600px;
+    width: 18vw;
+    border-radius: 10px;
+    padding: .5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: unset !important;
+    background-color: white;
+    box-shadow: 0 1px 14px -7px #7b7b7b;
+}
+
+
+.stake-token-box input {
+    text-align: center!important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stake-label-div {
+    width: 90%;
+    
+}
+
+.stake-token-box input, select {
+    height: 4rem;
+
+    border-radius: 10px;
+    background: white;
+}
+
+h5 + select {
+    width: 100%;
+}
+
+.mixins-label {
+    width: 70%;
+    border: 3px solid #3698F3;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.mixins-label + select {
+    padding-left: 1rem;
+}
+
+.stake-token-box input {
+    width: 100%;
+}
+
+.stake-token-box .row {
+    width: 90%;
+    justify-content: space-between;
+}
+
+.custom-button-send {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 10px;
+    color:#fff;
+    padding: .5rem;
+    border: .5rem solid #3698F3;
+    border-radius: 10px;
+    background: linear-gradient(270deg, #3698F3 0%, #13D0FD 100%);
+}
+
+.custom-button-send:hover {
+    background: linear-gradient(270deg, #13D0FD 0%, #3698F3 100%);
+    border: .5rem solid #3698F3;
+}
