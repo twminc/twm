@@ -3723,7 +3723,7 @@ class WalletHome extends React.Component {
                                                 </button>
                                                     <AiOutlineInfoCircle className="ml-2" size={20} data-tip data-for='apiInfo' />
                                                     <ReactTooltip id='apiInfo' type='info' effect='solid'>
-                                                        <span>This is info about setting a market API. Lorem Ipsum.</span>
+                                                        <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
                                                     </ReactTooltip>
                                         </form>
                                     </div>
