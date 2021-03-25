@@ -3768,7 +3768,7 @@ class WalletHome extends React.Component {
                                         apiUrl={this.state.api_url}
                                         closeFn={() => this.handleBuyerMessages()}
                                         sendFn={e => this.buyer_reply_by_order(e)}
-                                        refreshFn={() => this.load_buyers_messages_for_selected_order()}
+                                        refreshFn={() => this.load_buyers_messages_for_selected_order(this.state.buyerSelectOffer, this.state.buyerSelectOrder)}
                                         messages={this.renderBuyerMessages()}
                                         orderId={this.state.buyerSelectOrder}
                                         offerId={this.state.buyerSelectOffer} />
