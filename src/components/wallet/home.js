@@ -3232,7 +3232,7 @@ class WalletHome extends React.Component {
                                 />
 
                                 <SendSafex
-                                    title="SEND SAFEX"
+                                    title="SEND SAFEX CASH (SFX)"
                                     send={this.cash_send}
                                     id="send_cash"
                                 />
@@ -4611,7 +4611,7 @@ class WalletHome extends React.Component {
                                     walletHeight={this.state.wallet_height}
                                 />
                                 <SendSafex
-                                    title="SEND TOKENS"
+                                    title="SEND SAFEX TOKENS (SFT)"
                                     style="token"
                                     send={this.token_send}
                                     id="send_token"
