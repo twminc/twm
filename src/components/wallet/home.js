@@ -75,6 +75,7 @@ import {
 import zlib from 'zlib';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import MessagesModal from '../customComponents/MessagesModal';
+import { INSTRUMENTS } from '../../consts';
 
 const cryptoRandomString = require('crypto-random-string');
 
@@ -3234,6 +3235,7 @@ class WalletHome extends React.Component {
                                 <SendSafex
                                     title="SEND SAFEX CASH (SFX)"
                                     send={this.cash_send}
+                                    instrument={INSTRUMENTS.SFX}
                                     id="send_cash"
                                 />
                             </Col>
@@ -4614,6 +4616,7 @@ class WalletHome extends React.Component {
                                     title="SEND SAFEX TOKENS (SFT)"
                                     style="token"
                                     send={this.token_send}
+                                    instrument={INSTRUMENTS.SFT}
                                     id="send_token"
                                 />
                             </Col>

@@ -3,6 +3,8 @@ import ReactTooltip from "react-tooltip";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 
 import "./ComponentCSS/SendSafex.css";
+import NumberInput from "./NumberInput";
+import { INSTRUMENTS } from "../../consts";
 
 export default function SendSafex(props) {
   return (
@@ -44,7 +46,12 @@ export default function SendSafex(props) {
         <input className="mb-4" id="address" name="destination" placeholder="Safex address" />
 
         <label htmlFor="amount">AMOUNT</label>
-        <input className="mb-4" id="amount" name="amount" placeholder="How much to send?" type="number" />
+        <NumberInput 
+          className="mb-4" 
+          id="amount" 
+          name="amount"
+          placeholder="How much to send?" 
+          decimals={props.instrument === INSTRUMENTS.SFX} />
 
         <div className="mb-4">
             <label>
