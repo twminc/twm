@@ -2,6 +2,7 @@ import React from "react";
 import ReactTooltip from "react-tooltip";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import "./ComponentCSS/Stake.css";
+import NumberInput from "./NumberInput";
 
 export default function Stake(props) {
   if (props.style === "stake") {
@@ -33,11 +34,10 @@ export default function Stake(props) {
           <label>Available: </label>
           <span>{props.tokenBalance} SFT</span>
 
-          <input
+          <NumberInput
             className="mt-2"
             name="amount"
             placeholder="How much to stake?"
-            type="number"
           />
         </div>
         <div className="w-100 d-flex align-items-center mt-3">

@@ -1,0 +1,2 @@
+const INSTRUMENTS = {SFX: 'SFX', SFT: 'SFT'};
+export {INSTRUMENTS};
