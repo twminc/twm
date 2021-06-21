@@ -70,7 +70,7 @@
     "react-tooltip": "^3.11.6",
     "safe-buffer": "^5.2.0",
     "safex-addressjs": "git+https://github.com/safex/safex_addressjs.git",
-    "safex-nodejs-libwallet": "git+https://github.com/safex/safex-nodejs-libwallet.git",
+    "safex-nodejs-libwallet": "git+https://github.com/safex/safex-nodejs-libwallet.git#develop",
     "save": "^2.4.0",
     "zlib": "^1.0.5"
   },
