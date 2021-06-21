@@ -80,7 +80,7 @@ export async function purchase_offer(wallet, cost, offer_id, quantity, mixin, ca
     }, callback);
 }
 
-export async function edit_offer(wallet, offerid, username, offer_title, offer_price, offer_quantity, offer_description, active, mixin, callback) {
+export async function edit_offer(wallet, offerid, username, offer_title, offer_price, offer_quantity, offer_description, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixin, callback) {
     let mixi = mixin >= 0 ? mixin : 6;
     let price2 = offer_price * 10000000000;
     wallet.createAdvancedTransaction({
@@ -92,6 +92,9 @@ export async function edit_offer(wallet, offerid, username, offer_title, offer_p
         safex_offer_quantity: offer_quantity,
         safex_offer_description: offer_description,
         safex_offer_active: active,
+        safex_offer_price_peg_id: price_peg_id,
+        safex_offer_price_peg_used: safex_offer_price_peg_used,
+        safex_offer_min_sfx_price: min_sfx_price,
         mixin: mixi
     }, callback);
 }

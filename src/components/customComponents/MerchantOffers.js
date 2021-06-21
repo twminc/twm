@@ -16,7 +16,7 @@ export default class MerchantOffers extends React.Component {
 
     select_the_offer = async (e, listing) => {
         e.preventDefault();
-        let my_table = await this.props.loadOrders(listing.offerID, listing.seller, 'http://stageapi.theworldmarketplace.com:17700');
+        let my_table = await this.props.loadOrders(listing.offerID, listing.seller, 'https://api.theworldmarketplace.com');
         console.log(my_table);
         this.setState({selected_offer: listing, selected_offer_orders: my_table});
     };
@@ -31,7 +31,7 @@ export default class MerchantOffers extends React.Component {
         let show_messages = await this.props.loadMessages(
             this.state.selected_offer.offerID,
             this.state.selected_offer.seller,
-            'http://stageapi.theworldmarketplace.com:17700',
+            'https://api.theworldmarketplace.com',
             order.order_id);
         console.log(show_messages);
         this.setState({selected_order: order, selected_messages: show_messages});
@@ -45,12 +45,12 @@ export default class MerchantOffers extends React.Component {
                 this.state.selected_offer.offerID,
                 this.state.selected_order.order_id,
                 e.target.messageBox.value,
-                'http://stageapi.theworldmarketplace.com:17700');
+                'https://api.theworldmarketplace.com');
             try {
                 let show_messages = await this.props.loadMessages(
                     this.state.selected_offer.offerID,
                     this.state.selected_offer.seller,
-                    'http://stageapi.theworldmarketplace.com:17700',
+                    'https://api.theworldmarketplace.com',
                     this.state.selected_order.order_id);
                 console.log(show_messages);
                 this.setState({selected_messages: show_messages});

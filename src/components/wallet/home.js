@@ -989,6 +989,14 @@ class WalletHome extends React.Component {
         }, 500);
     };
 
+    //open merchant management view from navigation
+    show_merchant = () => {
+        this.setState({keyRequest: false})
+        this.setState({
+            interface_view: 'merchant'
+        });
+    };
+
     //open staking view from navigation
     show_tokens = () => {
         let token_stakes = wallet.getMyStake();
@@ -3023,7 +3031,7 @@ class WalletHome extends React.Component {
     make_edit_offer = async (e) => {
         e.preventDefault();
         e.persist();
-        console.log(`let's list the offer it`);
+        console.log(`let's edit the offer`);
         let va = e.target;
 
 
@@ -3108,10 +3116,10 @@ class WalletHome extends React.Component {
         }
     };
 
-    edit_offer_async = async (wallet, offerid, username, title, price, quantity, data, active, mixins) => {
+    edit_offer_async = async (wallet, offerid, username, title, price, quantity, data, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixins) => {
         return new Promise((resolve, reject) => {
             try {
-                edit_offer(wallet, offerid, username, title, price, quantity, data, active, mixins, (err, res) => {
+                edit_offer(wallet, offerid, username, title, price, quantity, data, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixins, (err, res) => {
                     if (err) {
                         console.error(err);
                         console.error(`Error at first callback edit offer transaction`);
@@ -4686,6 +4694,7 @@ class WalletHome extends React.Component {
                     goHome={this.go_home}
                     goToTokens={this.show_tokens}
                     goToMarket={this.show_market}
+                    goToMerchant={this.show_merchant}
                     goToSettings={this.show_settings}
                     logout={this.logout}
                 />
