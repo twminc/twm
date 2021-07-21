@@ -174,7 +174,6 @@ class WalletHome extends React.Component {
             wallet.setSeedLanguage('English');
             try {
                 let twm_ls = localStorage.getItem('twm_file');
-                console.log(twm_ls);
 
                 let twm_file = JSON.parse(twm_ls);
 
@@ -3796,7 +3795,7 @@ class WalletHome extends React.Component {
                                         <label style={{width: '100px'}}>Offer ID</label>
                                         <label style={{width: '100px'}}>Actions</label>
                                     </div>
-                                    <div style={{width: '100%', maxHeight: '550px', overflow: 'overlay'}}>
+                                    <div style={{width: '100%', maxHeight: '550px', overflowY: 'scroll'}}>
                                     {table_of_listings || <div className="products-table-row p-4 text-align-center">Click "Show Products" to load products.</div>}
                                     </div>
                                     
