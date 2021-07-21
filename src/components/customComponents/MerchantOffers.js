@@ -102,74 +102,80 @@ export default class MerchantOffers extends React.Component {
                     if (typeof msg.message.so == 'string') {
                         console.log(`so is a string`);
 
-                        parsed_so = JSON.parse(msg.message.so);
-                        console.log(parsed_so);
-                    } else {
-                        parsed_so = msg.message.so;
-                    }
-                    if (parsed_so.fn.length > 2) {
-                        console.log(`there is a shipping object supplied!`);
                         try {
-                            console.log(`parsed the so`);
-                            return (
-                                <div key={key}>
-                                    <div>
+                            parsed_so = JSON.parse(msg.message.so);
+                            console.log(parsed_so);
+                            if (parsed_so.fn.length > 2) {
+                                console.log(`there is a shipping object supplied!`);
+                                try {
+                                    console.log(`parsed the so`);
+                                    return (
+                                        <div key={key}>
+                                            <div>
                                     <span>
                                         {msg.position}
                                     </span>
-                                    <div class="d-flex flex-column"
-                                    style={{
-                                        backgroundColor: '#d3d3d345',
-                                        padding: '10px',
-                                        borderRadius: '10px'}}>
-                                        <div class="d-flex">
-                                        <label>First name:</label>
-                                        <span className="ml-2">{parsed_so.fn}</span>
-                                        </div>
-                                        
-                                        <div class="d-flex">
-                                        <label>Last name:</label>
-                                        <span className="ml-2">{parsed_so.ln}</span>
-                                        </div>
+                                                <div class="d-flex flex-column"
+                                                     style={{
+                                                         backgroundColor: '#d3d3d345',
+                                                         padding: '10px',
+                                                         borderRadius: '10px'}}>
+                                                    <div class="d-flex">
+                                                        <label>First name:</label>
+                                                        <span className="ml-2">{parsed_so.fn}</span>
+                                                    </div>
 
-                                        <div class="d-flex">
-                                        <label>Email:</label>
-                                        <span className="ml-2">{parsed_so.ea}</span>
-                                        </div>
+                                                    <div class="d-flex">
+                                                        <label>Last name:</label>
+                                                        <span className="ml-2">{parsed_so.ln}</span>
+                                                    </div>
 
-                                        <div class="d-flex">
-                                        <label>Phone:</label>
-                                        <span className="ml-2">{parsed_so.ph}</span>
+                                                    <div class="d-flex">
+                                                        <label>Email:</label>
+                                                        <span className="ml-2">{parsed_so.ea}</span>
+                                                    </div>
+
+                                                    <div class="d-flex">
+                                                        <label>Phone:</label>
+                                                        <span className="ml-2">{parsed_so.ph}</span>
+                                                    </div>
+                                                    <div>
+                                                        <label>Street Address:</label>
+                                                        <span className="ml-2">{parsed_so.a1}</span>
+                                                    </div>
+                                                    <div class="d-flex">
+                                                        <label>City:</label>
+                                                        <span className="ml-2">{parsed_so.city}</span>
+                                                    </div>
+                                                    <div class="d-flex">
+                                                        <label>State:</label>
+                                                        <span className="ml-2">{parsed_so.s}</span>
+                                                    </div>
+                                                    <div class="d-flex">
+                                                        <label>Area code:</label>
+                                                        <span className="ml-2">{parsed_so.z}</span>
+                                                    </div>
+                                                    <div class="d-flex">
+                                                        <label>Country:</label>
+                                                        <span className="ml-2">{parsed_so.c}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    <div>
-                                        <label>Street Address:</label>
-                                        <span className="ml-2">{parsed_so.a1}</span>
-                                        </div>
-                                        <div class="d-flex">
-                                        <label>City:</label>
-                                        <span className="ml-2">{parsed_so.city}</span>
-                                        </div>
-                                        <div class="d-flex">
-                                        <label>State:</label>
-                                        <span className="ml-2">{parsed_so.s}</span>
-                                        </div>
-                                        <div class="d-flex">
-                                        <label>Area code:</label>
-                                        <span className="ml-2">{parsed_so.z}</span>
-                                        </div>
-                                        <div class="d-flex">
-                                        <label>Country:</label>
-                                        <span className="ml-2">{parsed_so.c}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
-                            );
-                        } catch (err) {
+                                    );
+                                } catch (err) {
+                                    console.error(err);
+                                    console.error(`error at parsing the shipping object`);
+                                }
+                            }
+                        } catch(err) {
                             console.error(err);
-                            console.error(`error at parsing the shipping object`);
+                            console.error(`error at trying to parse the shipping object`);
                         }
+                    } else {
+                        parsed_so = msg.message.so;
                     }
+
                 }
                 return (
                     <div key={key}>
@@ -270,7 +276,7 @@ export default class MerchantOffers extends React.Component {
 
         return (
             <div>
-                {the_view}
+                <div style={{padding: '20px', maxHeight: '800px', height: '50vh', overflowY: 'scroll'}}>{the_view}</div>
                 <MessagesModal
                         apiUrl={this.props.apiUrl}
                         isOpen={!!this.state.selected_order}

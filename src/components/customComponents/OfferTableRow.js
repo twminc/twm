@@ -28,6 +28,7 @@ export default class OfferTableRow extends React.Component {
 
     render() {
         return (
+            <div style={{maxHeight: '100%', overflowY: 'scroll'}}>
             <Row 
                 key={this.state.finalKey}  
                 className="staking-table-row"
@@ -80,7 +81,7 @@ export default class OfferTableRow extends React.Component {
                         Orders
                     </button>
                 </p>
-            </Row>
+            </Row></div>
                 
         )
     }
