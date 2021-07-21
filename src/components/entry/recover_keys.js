@@ -22,9 +22,8 @@ export default class RecoverKeys extends React.Component {
         this.state = {
             daemon_host: "",
             daemon_port: 0,
-            new_path: "",
             password: "",
-            safex_key: null,
+            new_path: "",
             success: false,
             network: "mainnet",
             testnet: false,
@@ -61,6 +60,7 @@ export default class RecoverKeys extends React.Component {
         e.preventDefault();
         this.setState({new_path: ""});
     };
+
     set_daemon_state = (e) => {
         e.preventDefault();
         this.setState({
@@ -77,7 +77,7 @@ export default class RecoverKeys extends React.Component {
     set_password = (e) => {
         e.preventDefault();
         if (e.target.password.value === e.target.repeat_password.value) {
-            this.setState({password: e.target.password.value});
+            this.setState({password: e.target.password.value, pageNumber: 4});
         } else {
             alert("passwords dont match");
         }
@@ -218,8 +218,6 @@ export default class RecoverKeys extends React.Component {
             console.log(this.state.viewkey);
             console.log(this.state.spendkey);
 
-
-
             this.setState({loading: true});
             let daemon_string = `${this.state.daemon_host}:${this.state.daemon_port}`;
             recover_from_keys_util(
@@ -328,27 +326,19 @@ export default class RecoverKeys extends React.Component {
                     <div className="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
                         <div
                             className="start-background-image w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                            <Image
-                                className="entry-mini-logo"
-                                src={require("./../../img/safex-multi-small.svg")}
-                            />
-                            <Image
-                                onClick={() => {
-                                    alert("Closing Wallet... (TEST)");
-                                }}
-                                className="entry-off-button pointer"
-                                src={require("./../../img/off_black.svg")}
-                            />
+                            <Image className="entry-mini-logo"
+                                   src={require("./../../img/safex-multi-small.svg")}/>
+                            <Image onClick={() => {
+                                alert("Closing Wallet... (TEST)");
+                            }}
+                                   className="entry-off-button pointer"
+                                   src={require("./../../img/off_black.svg")}/>
 
                             <Row className="entry-progress-row">
-                                <Col
-                                    onClick={this.goBack}
-                                    className="pointer d-flex align-items-center entry-back-text"
-                                    md={2}
-                                >
-                                    <IconContext.Provider
-                                        value={{color: "#13D3FD", size: "3rem"}}
-                                    >
+                                <Col onClick={this.goBack}
+                                     className="pointer d-flex align-items-center entry-back-text"
+                                     md={2}>
+                                    <IconContext.Provider value={{color: "#13D3FD", size: "3rem"}}>
                                         <IoIosArrowBack/>
                                     </IconContext.Provider>
                                     BACK
@@ -364,8 +354,7 @@ export default class RecoverKeys extends React.Component {
                                             ? "progress-icon-color-complete"
                                             : ""
                                     }
-                                    title={"ADDRESS & KEYS"}
-                                />
+                                    title={"ADDRESS & KEYS"}/>
 
                                 <ProgressIcon
                                     amount={4}
@@ -377,8 +366,7 @@ export default class RecoverKeys extends React.Component {
                                             : this.state.new_path.length > 0
                                             ? "progress-icon-color-complete"
                                             : ""
-                                    }
-                                />
+                                    }/>
 
                                 <ProgressIcon
                                     amount={4}
@@ -390,8 +378,7 @@ export default class RecoverKeys extends React.Component {
                                             : this.state.daemon_host.length > 0
                                             ? "progress-icon-color-complete"
                                             : ""
-                                    }
-                                />
+                                    }/>
 
                                 <ProgressIcon
                                     amount={4}
@@ -403,8 +390,7 @@ export default class RecoverKeys extends React.Component {
                                             : this.state.password.length > 0
                                             ? "progress-icon-color-complete"
                                             : ""
-                                    }
-                                />
+                                    }/>
                             </Row>
 
                             {this.state.wallet_made && (
@@ -414,8 +400,7 @@ export default class RecoverKeys extends React.Component {
                                         daemon_host={this.state.daemon_host}
                                         daemon_port={this.state.daemon_port}
                                         password={this.state.password}
-                                        wallet_path={this.state.new_path}
-                                    />
+                                        wallet_path={this.state.new_path}/>
                                 </div>
                             )}
 
@@ -427,15 +412,13 @@ export default class RecoverKeys extends React.Component {
                                             <AiOutlineInfoCircle
                                                 data-tip
                                                 data-for="publicAddressInfo"
-                                                className="ml-3"
-                                            />
+                                                className="ml-3"/>
 
                                             <ReactTooltip
                                                 type="info"
                                                 id="publicAddressInfo"
                                                 effect="solid"
-                                                place="bottom"
-                                            >
+                                                place="bottom">
                           <span>
                             Your Safex Address should start with ’Safex’ and
                             contain between 95 and 105 characters. <br/>
@@ -453,14 +436,12 @@ export default class RecoverKeys extends React.Component {
                                                 size={15}
                                                 data-tip
                                                 data-for="spendKeyInfo"
-                                                className="ml-3"
-                                            />
+                                                className="ml-3"/>
                                             <ReactTooltip
                                                 id="spendKeyInfo"
                                                 type="info"
                                                 effect="solid"
-                                                place="bottom"
-                                            >
+                                                place="bottom">
                           <span>
                             Your Secret Spend Key should be a 64 digit hex.
                             <br/>
@@ -477,14 +458,12 @@ export default class RecoverKeys extends React.Component {
                                             <AiOutlineInfoCircle
                                                 data-tip
                                                 data-for="viewKeyInfo"
-                                                className="ml-3"
-                                            />
+                                                className="ml-3"/>
                                             <ReactTooltip
                                                 id="viewKeyInfo"
                                                 type="info"
                                                 effect="solid"
-                                                place="bottom"
-                                            >
+                                                place="bottom">
                           <span>
                             Your Secret View Key should be a 64 digits hex.
                             <br/>
@@ -500,8 +479,7 @@ export default class RecoverKeys extends React.Component {
 
                                         <button
                                             className="w-100 mx-auto custom-button-entry orange-border mt-3"
-                                            type="submit"
-                                        >
+                                            type="submit">
                                             Set Keys
                                         </button>
                                     </Form>
@@ -520,17 +498,13 @@ export default class RecoverKeys extends React.Component {
                                                 <br/><i>{this.state.new_path}</i>
                                             </p>
 
-                                            <button
-                                                className="w-100 mx-auto custom-button-entry"
-                                                onClick={this.change_path}
-                                            >
+                                            <button className="w-100 mx-auto custom-button-entry"
+                                                    onClick={this.change_path}>
                                                 Change Path
                                             </button>
 
-                                            <button
-                                                className="mt-2 w-100 mx-auto custom-button-entry orange-border"
-                                                onClick={() => this.setState({pageNumber: 2})}
-                                            >
+                                            <button className="mt-2 w-100 mx-auto custom-button-entry orange-border"
+                                                    onClick={() => this.setState({pageNumber: 2})}>
                                                 Continue
                                             </button>
                                         </div>
@@ -540,17 +514,13 @@ export default class RecoverKeys extends React.Component {
                                                 Where would you like to save your new Safex Wallet
                                                 Files?
                                             </p>
-                                            <Form
-                                                className="mt-2 mb-2"
-                                                id="set_path"
-                                                onSubmit={this.set_path}
-                                            >
+                                            <Form className="mt-2 mb-2"
+                                                  id="set_path"
+                                                  onSubmit={this.set_path}>
                                                 <input className="display-none" type="file"/>
-                                                <button
-                                                    className="w-100 mx-auto custom-button-entry orange-border"
-                                                    type="submit"
-                                                    variant="primary"
-                                                >
+                                                <button className="w-100 mx-auto custom-button-entry orange-border"
+                                                        type="submit"
+                                                        variant="primary">
                                                     Select File Path
                                                 </button>
                                             </Form>
@@ -564,22 +534,20 @@ export default class RecoverKeys extends React.Component {
                             {this.state.new_path.length > 0 && this.state.pageNumber === 2 ? (
                                 <div className="entry-container">
                                     {this.state.daemon_host.length < 1 ? (
-                                        <form
-                                            id="set_daemon"
-                                            onSubmit={this.set_daemon_state}
-                                            className=""
-                                        >
+                                        <form id="set_daemon"
+                                              onSubmit={this.set_daemon_state}
+                                              className="">
                                             <label className="entry-form-label" htmlFor="daemon-host">
                                                 Daemon Host:
 
-                                                <AiOutlineInfoCircle className="ml-3" size={15} data-tip
+                                                <AiOutlineInfoCircle className="ml-3"
+                                                                     size={15}
+                                                                     data-tip
                                                                      data-for="daemonHostInfo"/>
-                                                <ReactTooltip
-                                                    id="daemonHostInfo"
-                                                    type="info"
-                                                    effect="solid"
-                                                    place="bottom"
-                                                >
+                                                <ReactTooltip id="daemonHostInfo"
+                                                              type="info"
+                                                              effect="solid"
+                                                              place="bottom">
                         <span>
                           This is the URL used to connect to the Safex
                           blockchain.
@@ -608,29 +576,23 @@ export default class RecoverKeys extends React.Component {
                                                 </ReactTooltip>
                                             </label>
 
-                                            <input
-                                                id="daemon-host"
-                                                className="my-2 entry-form-input"
-                                                name="daemon_host"
-                                                defaultValue="rpc.safex.org"
-                                                placedholder="set the ip address of the safex blockchain"
-                                            />
+                                            <input id="daemon-host"
+                                                   className="my-2 entry-form-input"
+                                                   name="daemon_host"
+                                                   defaultValue="rpc.safex.org"
+                                                   placedholder="set the ip address of the safex blockchain"/>
 
                                             <label htmlFor="daemon-port">Daemon Port:</label>
 
-                                            <input
-                                                id="daemon-port"
-                                                className="mt-2 mb-3"
-                                                name="daemon_port"
-                                                defaultValue="17402"
-                                                placedholder="set the port of the safex blockchain"
-                                            />
+                                            <input id="daemon-port"
+                                                   className="mt-2 mb-3"
+                                                   name="daemon_port"
+                                                   defaultValue="17402"
+                                                   placedholder="set the port of the safex blockchain"/>
 
-                                            <button
-                                                className="w-100 custom-button-entry orange-border"
-                                                type="submit"
-                                                variant="primary"
-                                            >
+                                            <button className="w-100 custom-button-entry orange-border"
+                                                    type="submit"
+                                                    variant="primary">
                                                 Set Connection
                                             </button>
                                         </form>
@@ -644,19 +606,15 @@ export default class RecoverKeys extends React.Component {
                                                 </i>
                                             </p>
 
-                                            <button
-                                                className="w-100 custom-button-entry"
-                                                onClick={() =>
-                                                    this.setState({daemon_host: "", daemon_port: 0})
-                                                }
-                                            >
+                                            <button className="w-100 custom-button-entry"
+                                                    onClick={() =>
+                                                        this.setState({daemon_host: "", daemon_port: 0})
+                                                    }>
                                                 Reset Connection
                                             </button>
 
-                                            <button
-                                                className="mt-2 w-100 mx-auto custom-button-entry orange-border"
-                                                onClick={() => this.setState({pageNumber: 3})}
-                                            >
+                                            <button className="mt-2 w-100 mx-auto custom-button-entry orange-border"
+                                                    onClick={() => this.setState({pageNumber: 3})}>
                                                 Continue
                                             </button>
                                         </div>
@@ -668,37 +626,29 @@ export default class RecoverKeys extends React.Component {
 
                             {this.state.pageNumber === 3 && (
                                 <div className="entry-container">
-                                    <form
-                                        id="set_password"
-                                        className=""
-                                        onSubmit={this.set_password}
-                                    >
+                                    <form id="set_password"
+                                          className=""
+                                          onSubmit={this.set_password}>
+
                                         <label htmlFor="password-input">Choose a password</label>
-                                        <input
-                                            id="password-input"
-                                            type="password"
-                                            name="password"
-                                            className="mt-2 mb-2"
-                                        />
+
+                                        <input id="password-input"
+                                               type="password"
+                                               name="password"
+                                               className="mt-2 mb-2"/>
 
                                         <label htmlFor="repeat-password-input">
                                             Confirm your password
                                         </label>
 
-                                        <input
-                                            id="repeat-password-input"
-                                            name="repeat_password"
-                                            className="mt-2 mb-2"
-                                            type="password"
-                                        />
+                                        <input id="repeat-password-input"
+                                               name="repeat_password"
+                                               className="mt-2 mb-2"
+                                               type="password"/>
 
                                         <button
                                             type="submit"
-                                            onClick={() => {
-                                                this.setState({pageNumber: 4});
-                                            }}
-                                            className="w-100 custom-button-entry orange-border mt-2"
-                                        >
+                                            className="w-100 custom-button-entry orange-border mt-2">
                                             Set Password
                                         </button>
                                     </form>

@@ -26,7 +26,6 @@ export default class CreateWallet extends React.Component {
       daemon_port: 0,
       new_path: "",
       password: "",
-      safex_key: null,
       success: false,
       network: "mainnet",
       testnet: false,

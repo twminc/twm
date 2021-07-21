@@ -21,9 +21,8 @@ export default class RecoverSeed extends React.Component {
     this.state = {
       daemon_host: "",
       daemon_port: 0,
-      new_path: "",
       password: "",
-      safex_key: null,
+      new_path: "",
       success: false,
       network: "mainnet",
       testnet: false,
@@ -58,6 +57,7 @@ export default class RecoverSeed extends React.Component {
     e.preventDefault();
     this.setState({ new_path: "" });
   };
+
   set_daemon_state = (e) => {
     e.preventDefault();
     this.setState({
