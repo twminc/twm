@@ -73,18 +73,18 @@ class AccountInfo extends React.Component {
           <button onClick={props.rescan}>Hard Rescan</button>
         </div>
 
-        <div class="input-group">
+        <div className="input-group">
           <input
             style={{ height: "30px", textOverflow: "ellipsis", zIndex: "0" }}
             id="safexAddress"
             readOnly={true}
             value={props.address}
             type="text"
-            class="form-control"
+            className="form-control"
             aria-describedby="button-addon2"
           />
           <button
-            class="btn btn-outline-secondary"
+            className="btn btn-outline-secondary"
             type="button"
             data-tip="Copy address"
             id="button-addon2"
@@ -97,7 +97,7 @@ class AccountInfo extends React.Component {
           </button>
           <ReactTooltip />
           <button
-            class="btn btn-outline-secondary"
+            className="btn btn-outline-secondary"
             type="button"
             data-tip="Show keys"
             id="button-addon2"
