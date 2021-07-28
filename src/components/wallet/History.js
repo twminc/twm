@@ -3,7 +3,7 @@ import React from 'react';
 import {Row, Col, Container, Table} from 'react-bootstrap';
 
 
-export default class Settings extends React.Component {
+export default class History extends React.Component {
     constructor(props) {
         super(props);
         this.state = {};
