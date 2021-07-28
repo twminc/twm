@@ -205,23 +205,13 @@ export default class RecoverSeed extends React.Component {
         ) : (
           <div className="w-100 h-100 d-flex flex-column justify-content-center align-items-center">
             <div className="start-background-image w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-              <Image
-                onClick={() => {
+              <Image onClick={() => {
                   alert("Closing Wallet... (TEST)");
-                }}
-                className="entry-off-button pointer"
-                src={require("./../../img/off_black.svg")}
-              />
+                }} className="entry-off-button pointer" src={require("./../../img/off_black.svg")}/>
 
               <Row className="entry-progress-row">
-                <Col
-                  onClick={this.goBack}
-                  className="d-flex align-items-center entry-back-text pointer"
-                  md={2}
-                >
-                  <IconContext.Provider
-                    value={{ color: "#13D3FD", size: "3rem" }}
-                  >
+                <Col onClick={this.goBack} className="d-flex align-items-center entry-back-text pointer" md={2}>
+                  <IconContext.Provider value={{ color: "#13D3FD", size: "3rem" }}>
                     <IoIosArrowBack />
                   </IconContext.Provider>
                   BACK
@@ -237,8 +227,7 @@ export default class RecoverSeed extends React.Component {
                       ? "progress-icon-color-complete"
                       : ""
                   }
-                  title={"SEED PHRASE"}
-                />
+                  title={"SEED PHRASE"}/>
 
                 <ProgressIcon
                   amount={4}
@@ -250,8 +239,7 @@ export default class RecoverSeed extends React.Component {
                       : this.state.new_path.length > 0
                       ? "progress-icon-color-complete"
                       : ""
-                  }
-                />
+                  }/>
 
                 <ProgressIcon
                   amount={4}
@@ -263,8 +251,7 @@ export default class RecoverSeed extends React.Component {
                       : this.state.daemon_host.length > 0
                       ? "progress-icon-color-complete"
                       : ""
-                  }
-                />
+                  }/>
 
                 <ProgressIcon
                   amount={4}
@@ -276,8 +263,7 @@ export default class RecoverSeed extends React.Component {
                       : this.state.password.length > 0
                       ? "progress-icon-color-complete"
                       : ""
-                  }
-                />
+                  }/>
               </Row>
 
               {this.state.wallet_made && (
@@ -287,8 +273,7 @@ export default class RecoverSeed extends React.Component {
                     daemon_host={this.state.daemon_host}
                     daemon_port={this.state.daemon_port}
                     password={this.state.password}
-                    wallet_path={this.state.new_path}
-                  />
+                    wallet_path={this.state.new_path}/>
                 </div>
               )}
 
@@ -297,17 +282,9 @@ export default class RecoverSeed extends React.Component {
                   <p className="h3">Enter your Seed Phrase</p>
 
                   <Form id="set_seed" onSubmit={this.set_seed}>
-                    <Form.Control
-                      className="w-100"
-                      name="seed"
-                      as="textarea"
-                      rows="3"
-                    />
+                    <Form.Control className="w-100" name="seed" as="textarea" rows="3"/>
 
-                    <button
-                      className="w-100 mt-2 custom-button-entry orange-border"
-                      type="submit"
-                    >
+                    <button className="w-100 mt-2 custom-button-entry orange-border" type="submit">
                       Set Seed
                     </button>
                   </Form>
@@ -326,17 +303,13 @@ export default class RecoverSeed extends React.Component {
                           <br /><i>{this.state.new_path}</i>
                         </p>
 
-                        <button
-                          className="w-100 mt-3 mx-auto custom-button-entry"
-                          onClick={this.change_path}
-                        >
+                        <button className="w-100 mt-3 mx-auto custom-button-entry"
+                          onClick={this.change_path}>
                           Change Path
                         </button>
 
-                        <button
-                          className="w-100 mt-2 mx-auto custom-button-entry orange-border"
-                          onClick={() => this.setState({ pageNumber: 2 })}
-                        >
+                        <button className="w-100 mt-2 mx-auto custom-button-entry orange-border"
+                          onClick={() => this.setState({ pageNumber: 2 })}>
                           Continue
                         </button>
                     </div>
@@ -346,17 +319,10 @@ export default class RecoverSeed extends React.Component {
                         Where would you like to save your new Safex Wallet
                         Files?
                       </p>
-                      <Form
-                        className="mt-2 mb-2"
-                        id="set_path"
-                        onSubmit={this.set_path}
-                      >
+                      <Form className="mt-2 mb-2" id="set_path" onSubmit={this.set_path}>
                         <input className="display-none" type="file" />
-                          <button
-                            className="w-100 mt-2 mx-auto custom-button-entry orange-border"
-                            type="submit"
-                            variant="primary"
-                          >
+                          <button className="w-100 mt-2 mx-auto custom-button-entry orange-border"
+                            type="submit" variant="primary">
                             Select File Path
                           </button>
                       </Form>
@@ -370,20 +336,11 @@ export default class RecoverSeed extends React.Component {
               {this.state.new_path.length > 0 && this.state.pageNumber === 2 ? (
                 <div className="entry-container">
                   {this.state.daemon_host.length < 1 ? (
-                    <form
-                      id="set_daemon"
-                      onSubmit={this.set_daemon_state}
-                      className=""
-                    >
+                    <form id="set_daemon" onSubmit={this.set_daemon_state} className="">
                       <label className="entry-form-label" htmlFor="daemon-host">
                         Daemon Host:
                         <AiOutlineInfoCircle className="ml-3" size={15} data-tip data-for="daemonHostInfo" />
-                      <ReactTooltip
-                        id="daemonHostInfo"
-                        type="info"
-                        effect="solid"
-                        place="bottom"
-                      >
+                      <ReactTooltip id="daemonHostInfo" type="info" effect="solid" place="bottom">
                         <span>
                           This is the URL used to connect to the Safex
                           blockchain.
@@ -412,30 +369,21 @@ export default class RecoverSeed extends React.Component {
                       </ReactTooltip>
                       </label>
 
-                      <input
-                        id="daemon-host"
-                        className="my-2 entry-form-input"
+                      <input id="daemon-host" className="my-2 entry-form-input"
                         name="daemon_host"
                         defaultValue="rpc.safex.org"
-                        placedholder="set the ip address of the safex blockchain"
-                      />
+                        placedholder="set the ip address of the safex blockchain"/>
 
                       <label htmlFor="daemon-port">Daemon Port:</label>
 
-                      <input
-                        id="daemon-port"
-                        className="mt-2 mb-3"
+                      <input id="daemon-port" className="mt-2 mb-3"
                         name="daemon_port"
                         defaultValue="17402"
-                        placedholder="set the port of the safex blockchain"
-                      />
+                        placedholder="set the port of the safex blockchain"/>
 
-                      <button
-                        className="w-100 custom-button-entry orange-border"
-                        type="submit"
+                      <button className="w-100 custom-button-entry orange-border" type="submit"
                         variant="primary"
-                        size="lg"
-                      >
+                        size="lg">
                         Set Connection
                       </button>
                     </form>
@@ -449,19 +397,15 @@ export default class RecoverSeed extends React.Component {
                         </i>
                       </p>
 
-                      <button
-                        className="w-100 mt-2 custom-button-entry"
+                      <button className="w-100 mt-2 custom-button-entry"
                         onClick={() =>
                           this.setState({ daemon_host: "", daemon_port: 0 })
-                        }
-                      >
+                        }>
                         Reset Connection
                       </button>
 
-                      <button
-                        className="w-100 mt-2 mx-auto custom-button-entry orange-border"
-                        onClick={() => this.setState({ pageNumber: 3 })}
-                      >
+                      <button className="w-100 mt-2 mx-auto custom-button-entry orange-border"
+                        onClick={() => this.setState({ pageNumber: 3 })}>
                         Continue
                       </button>
                     </div>
@@ -473,35 +417,18 @@ export default class RecoverSeed extends React.Component {
 
               {this.state.pageNumber === 3 ? (
                 <div className="entry-container">
-                  <form
-                    id="set_password"
-                    className=""
-                    onSubmit={this.set_password}
-                  >
+                  <form id="set_password" className="" onSubmit={this.set_password}>
                     <label htmlFor="password-input">Choose a password</label>
 
-                    <input
-                      id="password-input"
-                      type="password"
-                      name="password"
-                      className="mt-2 mb-2"
-                    />
+                    <input id="password-input" type="password" name="password" className="mt-2 mb-2"/>
 
                     <label htmlFor="repeat-password-input">
                       Confirm your password
                     </label>
 
-                    <input
-                      id="repeat-password-input"
-                      name="repeat_password"
-                      className="mt-2 mb-2"
-                      type="password"
-                    />
+                    <input id="repeat-password-input" name="repeat_password" className="mt-2 mb-2" type="password"/>
 
-                    <button
-                      type="submit"
-                      className="w-100 mt-2 custom-button-entry orange-border"
-                    >
+                    <button type="submit" className="w-100 mt-2 custom-button-entry orange-border">
                       Set Password
                     </button>
                   </form>
@@ -520,10 +447,7 @@ export default class RecoverSeed extends React.Component {
                     This file will be saved to: <br /><i>{this.state.new_path}</i>
                   </p>
 
-                  <button
-                    onClick={this.make_wallet}
-                    className="w-100 mt-2 mx-auto custom-button-entry orange-border"
-                  >
+                  <button onClick={this.make_wallet} className="w-100 mt-2 mx-auto custom-button-entry orange-border">
                     Restore Wallet
                   </button>
                 </div>

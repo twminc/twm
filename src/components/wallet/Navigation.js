@@ -43,7 +43,7 @@ export default class Navigation extends React.Component {
                             <li className="menu__list-item"><a className="menu__link" href="#">Tokens</a></li>
                             <li className="menu__list-item"><Link className="menu__link" to="#"
                                                                   params={{wallet: this.props.wallet}}
-                                                                  path="/settings">Settings</Link></li>
+                                                                  path="/history">History</Link></li>
                             <li className="menu__list-item"><a className="menu__link" href="#"
                                                                onClick={this.logout}>Exit</a></li>
                         </ul>
