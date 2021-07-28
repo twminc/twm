@@ -4,7 +4,7 @@ import {Row, Col, Container, Button, Form, Image} from 'react-bootstrap';
 
 import {withRouter} from 'react-router-dom';
 
-import Settings from './Settings';
+import History from './History';
 
 import {normalize_8decimals} from '../../utils/wallet_creation';
 import sfxLogo from "../../img/sfx.svg";
@@ -1002,9 +1002,9 @@ class WalletHome extends React.Component {
         this.setState({interface_view: 'tokens', keyRequest: false, token_stakes: token_stakes})
     };
 
-    //open settings view from navigation
-    show_settings = () => {
-        this.setState({interface_view: 'settings', keyRequest: false})
+    //open history view from navigation
+    show_history = () => {
+        this.setState({interface_view: 'history', keyRequest: false})
     };
 
     logout = () => {
@@ -1375,32 +1375,43 @@ class WalletHome extends React.Component {
         try {
             let mixins = e.target.mixins.value - 1;
             if (mixins >= 0) {
-                let confirmed = window.confirm(`Are you sure you want to stake ${e.target.amount.value} SFT Safex Tokens?`);
-                if (confirmed) {
-                    try {
-                        this.setState({stake_txn_amount: e.target.amount.value});
-                        let staked_token = await this.token_stake_async(wallet, e.target.amount.value, mixins);
-                        let confirmed_fee = window.confirm(`The network fee to stake ${this.state.stake_txn_amount} SFT will be:  ${staked_token.fee() / 10000000000} SFX (Safex Cash)`);
-                        let fee = staked_token.fee();
-                        let txid = staked_token.transactionsIds();
-                        this.setState({stake_txn_id: txid, stake_txn_fee: fee});
-                        if (confirmed_fee) {
-                            try {
-                                let commit_stake = await this.commit_token_stake_txn_async(staked_token);
-                            } catch (err) {
-                                console.error(err);
-                                console.error(`error at the token stake committing`);
+                if (wallet.unlockedBalance() > 0) {
+                    let confirmed = window.confirm(`Are you sure you want to stake ${e.target.amount.value} SFT Safex Tokens?`);
+                    if (confirmed) {
+                        try {
+                            this.setState({stake_txn_amount: e.target.amount.value});
+                            let staked_token = await this.token_stake_async(wallet, e.target.amount.value, mixins);
+                            let confirmed_fee = window.confirm(`The network fee to stake ${this.state.stake_txn_amount} SFT will be:  ${staked_token.fee() / 10000000000} SFX (Safex Cash)`);
+                            let fee = staked_token.fee();
+                            if (fee > wallet.unlockedBalance()) {
+                                alert(`you do not have enough SFX (Safex Cash) to complete this transaction
+                                needed ${fee} your available balance is ${wallet.unlockedBalance()}`);
+                            } else {
+                                let txid = staked_token.transactionsIds();
+                                this.setState({stake_txn_id: txid, stake_txn_fee: fee});
+                                if (confirmed_fee) {
+                                    try {
+                                        let commit_stake = await this.commit_token_stake_txn_async(staked_token);
+                                    } catch (err) {
+                                        console.error(err);
+                                        console.error(`error at the token stake committing`);
+                                    }
+                                } else {
+                                    console.log("token staking transaction cancelled");
+                                    alert(`the token staking transaction has been successfully cancelled`);
+                                }
                             }
-                        } else {
-                            console.log("token staking transaction cancelled");
-                            alert(`the token staking transaction has been successfully cancelled`);
+                        } catch (err) {
+                            console.error(err);
+                            console.error(`error at the token staking transaction formation it was not commited`);
+                            alert(`error at the token staking transaction formation it was not commited`);
                         }
-                    } catch (err) {
-                        console.error(err);
-                        console.error(`error at the token staking transaction formation it was not commited`);
-                        alert(`error at the token staking transaction formation it was not commited`);
                     }
+                } else {
+                    alert(`you need a balance of Safex Cash (SFX) to successfully stake Safex Tokens (SFT)`)
                 }
+            } else {
+                alert(`mixins cannot be 0 `);
             }
         } catch (err) {
             console.error(err);
@@ -4638,7 +4649,7 @@ class WalletHome extends React.Component {
                                             stakedBalance={this.state.unlocked_stake.toLocaleString()}
                                             interest={this.state.blockchain_current_interest.cash_per_token / 10000000000}
                                             blockHeight={this.state.blockchain_height.toLocaleString()}
-                                            nextInterval={100 - (this.state.blockchain_height % 100)}
+                                            nextInterval={1000 - (this.state.blockchain_height % 1000)}
                                             totalNetworkStake={this.state.blockchain_tokens_staked.toLocaleString()}
                                         />
                                         <Stake
@@ -4659,12 +4670,13 @@ class WalletHome extends React.Component {
                         </div>
                     );
                 }
-                case "settings": {
+                case "history": {
                     return (
                         <div>
-                            <Settings
+                            <History
                                 txnhistory={this.state.txnhistory}
                                 updateHistory={this.refresh_history}
+                                theWallet={wallet}
                             />
                         </div>
                     );
@@ -4694,7 +4706,7 @@ class WalletHome extends React.Component {
                     goToTokens={this.show_tokens}
                     goToMarket={this.show_market}
                     goToMerchant={this.show_merchant}
-                    goToSettings={this.show_settings}
+                    goToHistory={this.show_history}
                     logout={this.logout}
                 />
                 {twmwallet()}
