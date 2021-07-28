@@ -17,7 +17,7 @@ import LegacyKeys from './components/entry/legacy/2loadkeys';
 import ConvertLegacy from './components/entry/legacy/3makewallet';
 
 import WalletHome from './components/wallet/home';
-import Settings from './components/wallet/Settings';
+import History from './components/wallet/History';
 
 
 
@@ -35,7 +35,7 @@ const routes = (
                 <Route exact path="/create_wallet" component={CreateWallet}/>
                 <Route exact path="/open_wallet" component={OpenWallet}/>
                 <Route exact path="/wallet_home" component={WalletHome}/>
-                <Route exact name="settings" path="/settings" component={Settings}/>
+                <Route exact name="history" path="/history" component={History}/>
             </Switch>
         </div>
     </Router>

@@ -32,7 +32,7 @@ function createWindow() {
         },
         useContentSize: true
     });
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
     // and load the index.html of the app.
     const startUrl =
@@ -61,7 +61,7 @@ function createWindow() {
                 label: "TWM Wallet",
                 submenu: [
                     {
-                        label: "TWM v1.0.0",
+                        label: "TWM v2.0.0",
                         selector: "orderFrontStandardAboutPanel:"
                     },
                     { type: "separator" },
@@ -107,7 +107,7 @@ function createWindow() {
 require("electron-context-menu")({
     prepend: (params, browserWindow) => [
         {
-            label: "TWM 1.0.0"
+            label: "TWM 2.0.0"
         }
     ],
     shouldShowMenu: (event, params) => params.mediaType !== "image",
