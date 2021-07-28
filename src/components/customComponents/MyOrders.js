@@ -14,7 +14,7 @@ export default class MyOrders extends React.Component {
         super(props);
         this.state = {
             rows: props.rows,
-            handleOrders: props.handleOrders,
+            handleOrders: props.handleOrders
         };
     }
 
@@ -23,21 +23,14 @@ export default class MyOrders extends React.Component {
     }
 
     render() {
-
         return (
             <div className="h-100">
 
                 <IconContext.Provider value={{color: '#FEB056', size: '20px'}}>
-                    <CgCloseR
-                        className="ml-5"
-                        onClick={this.state.handleOrders}
-                    />
+                    <CgCloseR className="ml-5" onClick={this.state.handleOrders} />
                 </IconContext.Provider>
 
-                <Col 
-                    className="pt-3 staking-table-table"
-                    style={{maxHeight: 300}}
-                >
+                <Col className="pt-3 staking-table-table" style={{maxHeight: 300}}>
                     <Row className="staking-table-header no-gutters">
                         <p>Order ID</p>
 
@@ -58,7 +51,6 @@ export default class MyOrders extends React.Component {
                     :
                         this.state.rows
                     }
-
                 </Col>
             </div>
         )
