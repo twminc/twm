@@ -2,7 +2,7 @@ import React from 'react';
 
 import {Row, Col, Image} from 'react-bootstrap';
 
-import {BiCog, BiPowerOff} from 'react-icons/bi'
+import {BiArchive, BiPowerOff} from 'react-icons/bi'
 
 import './ComponentCSS/MainHeader.css'
 
@@ -28,11 +28,10 @@ export default function MainHeader(props) {
                     {renderMenuItem('market', 'Market', props.goToMarket)}
                     {renderMenuItem('merchant', 'Merchant', props.goToMerchant)}
                     {renderMenuItem('tokens', 'Tokens', props.goToTokens)}
+                    {renderMenuItem('history', 'History', props.goToHistory)}
                 </Col>
 
                 <Col sm={2} className="">
-                    <BiCog tabIndex={4} size={40} className="m-3 pointer" onClick={props.goToSettings}/>
-
                     <BiPowerOff tabIndex={5} size={40} className="m-3 pointer" onClick={props.logout}/>
                 </Col>
         </Row>
