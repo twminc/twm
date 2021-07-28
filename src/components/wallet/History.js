@@ -14,12 +14,13 @@ export default class History extends React.Component {
     async componentDidMount() {
         console.log("load settings");
         this.props.updateHistory();
+        console.log(this.props.theWallet.unlockedBalance());
+        console.log(`wtf man`)
 
     };
 
     render() {
         let txn_history_table_data = this.props.txnhistory.map((txn, key) => {
-            console.log(txn);
             let the_type = '';
             switch (txn.transactionType) {
                 case 0: {
@@ -84,18 +85,34 @@ export default class History extends React.Component {
             }
 
 
-            return (
-                <tr className="tx-row" key={key}>
-                    <td>{txn.id}</td>
-                    <td>{txn.direction}</td>
-                    <td>{txn.pending}</td>
-                    <td className="">{the_type}</td>
-                    <td>{txn.tokenAmount > 0 ? (`${txn.tokenAmount / 10000000000} SFT`) : (`${txn.amount / 10000000000} SFX`)}</td>
-                    <td>{txn.fee / 10000000000}</td>
-                    <td>{txn.blockHeight}</td>
-                    <td>{txn.confirmations}</td>
-                </tr>
-            )
+            if (the_type == 'your purchase') {
+                return (
+                    <tr className="tx-row" key={key}>
+                        <td>{txn.id}</td>
+                        <td>{txn.direction}</td>
+                        <td>{txn.pending}</td>
+                        <td className="">{the_type}</td>
+                        <td>{txn.tokenAmount > 0 ? (`${txn.tokenAmount / 10000000000} SFT`) : (`${txn.amount / 10000000000 * 1.05} SFX`)}</td>
+                        <td>{txn.fee / 10000000000}</td>
+                        <td>{txn.blockHeight}</td>
+                        <td>{txn.confirmations}</td>
+                    </tr>
+                )
+            } else {
+                return (
+                    <tr className="tx-row" key={key}>
+                        <td>{txn.id}</td>
+                        <td>{txn.direction}</td>
+                        <td>{txn.pending}</td>
+                        <td className="">{the_type}</td>
+                        <td>{txn.tokenAmount > 0 ? (`${txn.tokenAmount / 10000000000} SFT`) : (`${txn.amount / 10000000000} SFX`)}</td>
+                        <td>{txn.fee / 10000000000}</td>
+                        <td>{txn.blockHeight}</td>
+                        <td>{txn.confirmations}</td>
+                    </tr>
+                )
+            }
+
         });
         console.log(txn_history_table_data);
         return (
