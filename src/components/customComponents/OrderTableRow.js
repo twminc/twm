@@ -8,6 +8,8 @@ import './ComponentCSS/StakingTable.css'
 
 import ReactTooltip from "react-tooltip";
 
+//This is unused component NOTE:: July 27, 2021
+
 export default class OrderTableRow extends React.Component {
 
     constructor(props) {

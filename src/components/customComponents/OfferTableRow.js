@@ -7,11 +7,13 @@ import './ComponentCSS/StakingTable.css'
 
 import ReactTooltip from "react-tooltip";
 
+//This is an unused component NOTE:: July 27, 2021
+
+
 export default class OfferTableRow extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            finalKey: props.myKey,
             title: props.title,
             price: props.price,
             quantity: props.quantity,
@@ -21,18 +23,13 @@ export default class OfferTableRow extends React.Component {
             handleEditOfferForm: props.handleEditOfferForm,
             handleShowOrders: props.handleShowOrders,
             getOrders: props.getOrders
-
         };
-        //this.imagestore = this.imagestore.bind(this);
     }
 
     render() {
         return (
             <div style={{maxHeight: '100%', overflowY: 'scroll'}}>
-            <Row 
-                key={this.state.finalKey}  
-                className="staking-table-row"
-            >
+            <Row key={this.state.finalKey} className="staking-table-row">
                 <p style={{wordBreak: 'break-word'}}>{this.state.title}</p>
             
                 <p>{this.state.price}</p>
@@ -44,40 +41,29 @@ export default class OfferTableRow extends React.Component {
                 <p data-tip data-for='offerID'>
                     {this.state.toEllipsis(this.state.id, 5, 5)}
                 </p>
-                    <ReactTooltip 
-                        className="entry-tooltip-container" 
+                    <ReactTooltip className="entry-tooltip-container"
                         id='offerID' 
                         effect='solid'
-                        place="top"
-                    >
+                        place="top">
                         <span>
                             {this.state.id}
                         </span>
                     </ReactTooltip>
                 <p>
-                    <button 
-                        onClick={() => this.state.getOrders(
+                    <button className="edit-button" onClick={() => this.state.getOrders(
                             this.state.id, 
                             this.state.seller, 
                             'https://api.theworldmarketplace.com'
                             )
-                        } 
-                        className="edit-button"
-                    >
+                        }>
                         Load
                     </button>
 
-                    <button 
-                        onClick={this.state.handleEditOfferForm} 
-                        className="edit-button"
-                    >
+                    <button className="edit-button" onClick={this.state.handleEditOfferForm}>
                         Edit
                     </button>
                      
-                    <button 
-                        onClick={this.state.handleShowOrders} 
-                        className="orders-button"
-                    >
+                    <button className="orders-button" onClick={this.state.handleShowOrders}>
                         Orders
                     </button>
                 </p>
