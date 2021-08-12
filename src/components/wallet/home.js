@@ -403,7 +403,7 @@ class WalletHome extends React.Component {
         e.preventDefault();
         let confirm = window.confirm(`Are you sure you want to remove ${user}?
         You should only do this if you think that the transaction to register the account did not go through.
-        Keep in mind this is IRREVERSABLE!`)
+        Keep in mind this is IRREVERSIBLE!`)
         if (confirm) {
             try {
                 let removed = wallet.removeSafexAccount(user);
@@ -1492,20 +1492,25 @@ class WalletHome extends React.Component {
                         let confirmed_fee = window.confirm(`The network fee to unstake ${this.state.unstake_txn_amount} SFT will be:  ${unstaked.fee() / 10000000000} SFX Safex Cash`);
                         let fee = unstaked.fee();
                         let txid = unstaked.transactionsIds();
-                        if (confirmed_fee) {
-                            try {
-                                this.setState({unstake_txn_id: txid, unstake_txn_fee: fee});
-                                let commit_unstake = await this.commit_token_unstake_txn_async(unstaked);
-                                console.log(`unstake committed`);
-                                alert(`stake transaction successfully committed`);
-                            } catch (err) {
-                                console.error(err);
-                                console.error(`Error when trying to commit the token unstaking transaction to the blockchain`);
-                                alert(`Error when trying to commit the token unstaking transaction to the blockchain`);
-                            }
+                        if (fee > wallet.unlockedBalance()) {
+                            alert(`you do not have enough SFX (Safex Cash) to complete this transaction
+                                needed ${fee} your available balance is ${wallet.unlockedBalance()}`);
                         } else {
-                            console.log("token staking transaction cancelled");
-                            alert(`token unstake transaction successfully cancelled`);
+                            if (confirmed_fee) {
+                                try {
+                                    this.setState({unstake_txn_id: txid, unstake_txn_fee: fee});
+                                    let commit_unstake = await this.commit_token_unstake_txn_async(unstaked);
+                                    console.log(`unstake committed`);
+                                    alert(`stake transaction successfully committed`);
+                                } catch (err) {
+                                    console.error(err);
+                                    console.error(`Error when trying to commit the token unstaking transaction to the blockchain`);
+                                    alert(`Error when trying to commit the token unstaking transaction to the blockchain`);
+                                }
+                            } else {
+                                console.log("token staking transaction cancelled");
+                                alert(`token unstake transaction successfully cancelled`);
+                            }
                         }
                     } catch (err) {
                         console.error(err);
