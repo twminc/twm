@@ -7,7 +7,6 @@ const {app} = window.require("electron").remote;
 const os = window.require('os');
 const fs = window.require('fs').promises;
 const libPath = window.require('path');
-const crypto = window.require('crypto');
 
 const WALLET_FILENAME = 'safexwallet.dat';
 const DEFAULT_WALLET_PATH = libPath.resolve(os.homedir(), WALLET_FILENAME);
