@@ -1501,7 +1501,7 @@ class WalletHome extends React.Component {
                                     this.setState({unstake_txn_id: txid, unstake_txn_fee: fee});
                                     let commit_unstake = await this.commit_token_unstake_txn_async(unstaked);
                                     console.log(`unstake committed`);
-                                    alert(`stake transaction successfully committed`);
+                                    alert(`Unstake transaction successfully committed txid: ${txid}`);
                                 } catch (err) {
                                     console.error(err);
                                     console.error(`Error when trying to commit the token unstaking transaction to the blockchain`);
@@ -2130,7 +2130,7 @@ class WalletHome extends React.Component {
                                                 <label>First name:</label>
                                                 <span className="ml-2">{parsed_so.fn}</span>
                                                 </div>
-                                                
+
                                                 <div class="d-flex">
                                                 <label>Last name:</label>
                                                 <span className="ml-2">{parsed_so.ln}</span>
@@ -3104,6 +3104,9 @@ class WalletHome extends React.Component {
                         va.price.value,
                         va.quantity.value,
                         JSON.stringify(o_obj),
+                        '',
+                        va.price.value,
+                        0,
                         active,
                         mixins
                     );
@@ -3131,7 +3134,18 @@ class WalletHome extends React.Component {
         }
     };
 
-    edit_offer_async = async (wallet, offerid, username, title, price, quantity, data, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixins) => {
+    edit_offer_async = async (wallet,
+                              offerid,
+                              username,
+                              title,
+                              price,
+                              quantity,
+                              data,
+                              price_peg_id,
+                              min_sfx_price,
+                              safex_offer_price_peg_used,
+                              active,
+                              mixins) => {
         return new Promise((resolve, reject) => {
             try {
                 edit_offer(wallet, offerid, username, title, price, quantity, data, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixins, (err, res) => {
@@ -3264,7 +3278,7 @@ class WalletHome extends React.Component {
                             </Col>
 
                             <Col sm={7} className="no-padding d-flex flex-column  justify-content-between">
-                                {this.renderAddressComponent()}                                
+                                {this.renderAddressComponent()}
                             </Col>
                         </div>
                     );
@@ -3367,17 +3381,17 @@ class WalletHome extends React.Component {
                                     }
                                 }}>
                                 <div className="modal-title">
-                                    BUY 
+                                    BUY
                                     <CgClose
                                         className="pointer"
-                                        style={{position: 'absolute', right: '15px', color: 'red'}} 
-                                        size={20} 
+                                        style={{position: 'absolute', right: '15px', color: 'red'}}
+                                        size={20}
                                         onClick={this.handleClosePurchaseForm} /></div>
 
                                 <Form id="purchase_item"
                                       onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
                                     <div className="d-flex flex-column p-3">
-                                        
+
                                         {this.state.show_purchase_offer_data.nft ?
                                             (<div style={{width: '300px'}} className="d-flex flex-column mt-2">
                                                 <label>
@@ -3494,21 +3508,21 @@ class WalletHome extends React.Component {
                                                src={this.state.show_purchase_offer_data.main_image}
                                                onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.main_image})}></Image>}
 
-                                            {this.state.show_purchase_offer_data.image_2 && 
+                                            {this.state.show_purchase_offer_data.image_2 &&
                                                 <Image className="product-image pointer ml-1"
                                                     src={this.state.show_purchase_offer_data.image_2}
                                                     onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_2})}></Image>}
 
-                                            {this.state.show_purchase_offer_data.image_3 && 
+                                            {this.state.show_purchase_offer_data.image_3 &&
                                                 <Image className="product-image pointer ml-1"
                                                     src={this.state.show_purchase_offer_data.image_3}
                                                     onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_3})}></Image>}
 
-                                            {this.state.show_purchase_offer_data.image_4 && 
+                                            {this.state.show_purchase_offer_data.image_4 &&
                                                 <Image className="product-image pointer ml-1"
                                                     src={this.state.show_purchase_offer_data.image_4}
-                                                    onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}    
-                                            <ReactModal 
+                                                    onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}
+                                            <ReactModal
                                                 isOpen={!!this.state.show_modal_for_image}
                                                 onRequestClose={() => this.setState({show_modal_for_image: null})}
                                                 style={{
@@ -3532,8 +3546,8 @@ class WalletHome extends React.Component {
                                                 >
                                     <CgClose
                                         className="pointer bg-white"
-                                        style={{position: 'absolute', top: '5px', right: '15px', color: 'red'}} 
-                                        size={20} 
+                                        style={{position: 'absolute', top: '5px', right: '15px', color: 'red'}}
+                                        size={20}
                                         onClick={()=> this.setState({show_modal_for_image: null})} />
                                                     <div className="mt-4">
                                                         <img style={{maxHeight: '90vh', maxWidth: '95%'}} src={this.state.show_modal_for_image} />
@@ -3732,9 +3746,9 @@ class WalletHome extends React.Component {
                                                 type="text"
                                                        onChange={this.handle_change_api_fetch_url}
                                                        value="https://api.theworldmarketplace.com"/>
-                                            
+
                                                 <button
-                                                style={{padding: '1rem', lineHeight: 0}} 
+                                                style={{padding: '1rem', lineHeight: 0}}
                                                 onClick={this.load_offers_from_api} className="search-button ml-3">
                                                     Show Products
                                                 </button>
@@ -3763,7 +3777,7 @@ class WalletHome extends React.Component {
                                         <label style={{width: '120px'}}>Offer ID</label>
                                         <label style={{width: '160px'}}>Actions</label>
                                     </div>
-                                    {this.buyer_get_orders().map(order => 
+                                    {this.buyer_get_orders().map(order =>
                                     <div key={order.order_id} className="products-table-row d-flex">
                                         <div className="p-2" style={{width: '200px'}}>{order.title}</div>
                                         <div className="d-flex align-items-center" style={{width: '100px'}}>{order.price} <img width="20px" className="ml-2" src={sfxLogo} /></div>
@@ -3788,7 +3802,7 @@ class WalletHome extends React.Component {
                                     </div>
                                     </div>)}
 
-                                    <MessagesModal 
+                                    <MessagesModal
                                         isOpen={this.state.showBuyerMessages}
                                         apiUrl={this.state.api_url}
                                         closeFn={() => this.handleBuyerMessages()}
@@ -3814,7 +3828,7 @@ class WalletHome extends React.Component {
                                     <div style={{width: '100%', maxHeight: '550px', overflowY: 'scroll'}}>
                                     {table_of_listings || <div className="products-table-row p-4 text-align-center">Click "Show Products" to load products.</div>}
                                     </div>
-                                    
+
                                 </div>
                             }
                         </div>
@@ -4704,7 +4718,7 @@ class WalletHome extends React.Component {
 
         return (
             <div className="height100 home-background-image">
-                
+
                 <MainHeader
                     view={this.state.interface_view}
                     goHome={this.go_home}
