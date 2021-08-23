@@ -6,8 +6,7 @@ import {get_api_info} from '../../utils/twm_actions';
 const os = window.require('os');
 const fs = window.require('fs').promises;
 const libPath = window.require('path');
-const crypto = window.require('crypto');
-var walley;
+
 const WALLET_FILENAME = 'safexwallet.dat';
 const DEFAULT_WALLET_PATH = libPath.resolve(os.homedir(), WALLET_FILENAME);
 
@@ -126,15 +125,13 @@ export default class SelectEntry extends React.Component {
                         {this.state.legacy_detected ? 
                         (
                             <Col className="my-5 p-3">
-                                <button className="custom-button-entry orange-border" onClick={() => this.setState({showLegacyAlert: !this.state.showLegacyAlert})}>Open Legacy Wallet</button>
+                                <button className="custom-button-entry orange-border"
+                                        onClick={() => this.setState({showLegacyAlert: !this.state.showLegacyAlert})}>
+                                    Open Legacy Wallet
+                                </button>
                                 <Collapse in={this.state.showLegacyAlert}>
-                                <Alert 
-                                    variant="info" 
-                                    transition={false}
-                                    className="mt-3 w-50 mx-auto entry-back-text"    
-                                >
+                                <Alert variant="info" transition={false} className="mt-3 w-50 mx-auto entry-back-text">
                                     <Alert.Heading>We are working on this feature. Thank you for your patience!</Alert.Heading>
-                                   
                                 </Alert>
                                 </Collapse>
                             </Col>
