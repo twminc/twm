@@ -112,7 +112,7 @@ export default class RecoverSeed extends React.Component {
       this.setState({ loading: false });
       console.error(err);
       console.error("error on initial recovery");
-      alert("error on initial recovery11");
+      alert("error on initial recovery");
     }
   };
 
@@ -362,7 +362,7 @@ export default class RecoverSeed extends React.Component {
                               PORT: <b>17402</b>
                             </li>
                             <li className="mt-2">
-                              The default is rpc.safex.org:30393
+                              The default is rpc.safex.org:17402
                             </li>
                           </ul>
                         </span>

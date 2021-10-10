@@ -54,10 +54,10 @@ export default class MerchantOffers extends React.Component {
                     this.state.selected_order.order_id);
                 console.log(show_messages);
                 this.setState({selected_messages: show_messages});
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
             }
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             console.error(`error at sending the message`);
             alert(`error at sending the message`);
@@ -82,8 +82,8 @@ export default class MerchantOffers extends React.Component {
                         <span>
                             {msg.position}
                         </span>
-                        <span>{msg.message.n}</span>
-                    </div>
+                            <span>{msg.message.n}</span>
+                        </div>
                     );
                 } else if (msg.message.m.length > 0) {
                     console.log(`this is a direct message open ended`);
@@ -92,8 +92,9 @@ export default class MerchantOffers extends React.Component {
                         <span style={{color: '#0000004d'}}>
                             {msg.position}
                         </span>
-                        <span className={`message ${msg.from.startsWith('-----BEGIN') ? 'message--mine' : 'message--yours'}`}>{msg.message.m}</span>
-                    </div>
+                            <span
+                                className={`message ${msg.from.startsWith('-----BEGIN') ? 'message--mine' : 'message--yours'}`}>{msg.message.m}</span>
+                        </div>
                     );
                 } else if (msg.message.hasOwnProperty('so')) {
                     console.log(msg.message.so);
@@ -119,7 +120,8 @@ export default class MerchantOffers extends React.Component {
                                                      style={{
                                                          backgroundColor: '#d3d3d345',
                                                          padding: '10px',
-                                                         borderRadius: '10px'}}>
+                                                         borderRadius: '10px'
+                                                     }}>
                                                     <div class="d-flex">
                                                         <label>First name:</label>
                                                         <span className="ml-2">{parsed_so.fn}</span>
@@ -142,6 +144,10 @@ export default class MerchantOffers extends React.Component {
                                                     <div>
                                                         <label>Street Address:</label>
                                                         <span className="ml-2">{parsed_so.a1}</span>
+                                                    </div>
+                                                    <div>
+                                                        <label>Street Address 2:</label>
+                                                        <span className="ml-2">{parsed_so.a2}</span>
                                                     </div>
                                                     <div class="d-flex">
                                                         <label>City:</label>
@@ -168,7 +174,7 @@ export default class MerchantOffers extends React.Component {
                                     console.error(`error at parsing the shipping object`);
                                 }
                             }
-                        } catch(err) {
+                        } catch (err) {
                             console.error(err);
                             console.error(`error at trying to parse the shipping object`);
                         }
@@ -199,32 +205,32 @@ export default class MerchantOffers extends React.Component {
             the_view = (<div className="w-100">
                 <h2>Offers</h2>
                 <div>
-                        <label style={{width: '200px'}}>Title</label>
-                        <label style={{width: '120px'}}>Price</label>
-                        <label style={{width: '100px'}}>Quantity</label>
-                        <label style={{width: '120px'}}>Offer ID</label>
-                        <label style={{width: '100px'}}>Actions</label>
+                    <label style={{width: '200px'}}>Title</label>
+                    <label style={{width: '120px'}}>Price</label>
+                    <label style={{width: '100px'}}>Quantity</label>
+                    <label style={{width: '120px'}}>Offer ID</label>
+                    <label style={{width: '100px'}}>Actions</label>
                     {this.state.user_offers.map((listing, key) => (
-                        <div className="d-flex mb-2 align-items-center">
-                            <div style={{width: '200px'}}>{listing.title}</div>
-                            <div style={{width: '120px'}}>{listing.price / 10000000000}</div>
-                            <div style={{width: '100px'}}>{listing.quantity}</div>
-                            <div style={{width: '120px'}} data-tip data-for='offerID'>
-                                {listing.offerID.slice(0, 8)}
+                            <div className="d-flex mb-2 align-items-center">
+                                <div style={{width: '200px'}}>{listing.title}</div>
+                                <div style={{width: '120px'}}>{listing.price / 10000000000}</div>
+                                <div style={{width: '100px'}}>{listing.quantity}</div>
+                                <div style={{width: '120px'}} data-tip data-for='offerID'>
+                                    {listing.offerID.slice(0, 8)}
+                                </div>
+                                <div style={{width: '100px'}}>
+                                    <button
+                                        onClick={() => this.props.handleShowEditOfferForm(listing)}
+                                        className="edit-button">
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={(e) => this.select_the_offer(e, listing)}
+                                        className="orders-button">
+                                        Orders
+                                    </button>
+                                </div>
                             </div>
-                            <div style={{width: '100px'}}>
-                                <button
-                                    onClick={() => this.props.handleShowEditOfferForm(listing)}
-                                    className="edit-button">
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={(e) => this.select_the_offer(e, listing)}
-                                    className="orders-button">
-                                    Orders
-                                </button>
-                            </div>
-                        </div>
                         )
                     )}
                 </div>
@@ -234,21 +240,21 @@ export default class MerchantOffers extends React.Component {
                 the_view = (<div className="w-100">
                     <span style={{color: '#13D3FD'}} className="mb-2 pointer" onClick={() => this.backToOffers()}>← BACK TO OFFERS</span>
                     <div>
-                    <label>Offer ID</label>
-                    <span className="ml-3">{this.state.selected_offer.offerID}</span>
+                        <label>Offer ID</label>
+                        <span className="ml-3">{this.state.selected_offer.offerID}</span>
                     </div>
 
                     <div>
-                    <label>Title</label>
-                    <span className="ml-3 mb-3">{this.state.selected_offer.title}</span>
+                        <label>Title</label>
+                        <span className="ml-3 mb-3">{this.state.selected_offer.title}</span>
                     </div>
 
                     <span style={{fontSize: "1.5rem"}}>Orders</span>
                     <div style={{
                         height: '350px',
                         overflow: 'overlay'
-                        }} 
-                        className="d-flex flex-column">
+                    }}
+                         className="d-flex flex-column">
                         <div className="d-flex align-items-center mb-3">
                             <label style={{width: '360px'}}>Order ID</label>
                             <label style={{width: '120px'}}>Quantity</label>
@@ -278,14 +284,14 @@ export default class MerchantOffers extends React.Component {
             <div>
                 <div style={{padding: '20px', maxHeight: '800px', height: '50vh', overflowY: 'scroll'}}>{the_view}</div>
                 <MessagesModal
-                        apiUrl={this.props.apiUrl}
-                        isOpen={!!this.state.selected_order}
-                        closeFn={() => this.setState({selected_order: '', selected_messages: null})}
-                        sendFn={(e) => this.local_merchant_reply(e)}
-                        refreshFn={e => this.showMessagesModal(e, this.state.selected_order)}
-                        messages={this.getMerchantMessages()}
-                        offerId={this.state.selected_offer.offerID}
-                        orderId={this.state.selected_order.order_id} />
+                    apiUrl={this.props.apiUrl}
+                    isOpen={!!this.state.selected_order}
+                    closeFn={() => this.setState({selected_order: '', selected_messages: null})}
+                    sendFn={(e) => this.local_merchant_reply(e)}
+                    refreshFn={e => this.showMessagesModal(e, this.state.selected_order)}
+                    messages={this.getMerchantMessages()}
+                    offerId={this.state.selected_offer.offerID}
+                    orderId={this.state.selected_order.order_id}/>
             </div>
         )
     }

@@ -73,11 +73,9 @@ import {
 } from "../../utils/twm_actions";
 
 import zlib from 'zlib';
-import { AiOutlineInfoCircle } from 'react-icons/ai';
+import {AiOutlineInfoCircle} from 'react-icons/ai';
 import MessagesModal from '../customComponents/MessagesModal';
-import { INSTRUMENTS } from '../../consts';
-
-const cryptoRandomString = require('crypto-random-string');
+import {INSTRUMENTS} from '../../consts';
 
 const sfxjs = window.require('safex-addressjs');
 
@@ -85,12 +83,6 @@ const sfxjs = window.require('safex-addressjs');
 var wallet;
 
 let offerRows;
-let tableOfOrders;
-let buyerOrders;
-let offerDropdown = [];
-let orderDropdown = [];
-
-let finalMessage = [];
 
 class WalletHome extends React.Component {
     constructor(props) {
@@ -130,7 +122,17 @@ class WalletHome extends React.Component {
             twm_file: {},
             show_purchase_offer: {title: '', quantity: 0, offerID: '', seller: ''},
             show_purchase_offer_data: {main_image: false},
-            show_edit_offer_data: {description: '', main_image: '', image_2: '', image_3: '', image_4: '', sku: '', barcode: '', weight: '', country: ''},
+            show_edit_offer_data: {
+                description: '',
+                main_image: '',
+                image_2: '',
+                image_3: '',
+                image_4: '',
+                sku: '',
+                barcode: '',
+                weight: '',
+                country: ''
+            },
             show_edit_offer: {},
             order_ids_selected: [],
             messages_selected: [],
@@ -422,7 +424,7 @@ class WalletHome extends React.Component {
     register_account = async (e) => {
         e.preventDefault();
 
-        if (this.state.tokens >= 1000 && this.state.first_refresh === true) {
+        if (this.state.tokens >= 1000 && this.state.cash > 0.01 && this.state.first_refresh === true) {
             try {
                 let vees = e.target;
 
@@ -727,7 +729,7 @@ class WalletHome extends React.Component {
         e.persist();
         try {
             let mixins = e.target.mixins.value - 1;
-            if (mixins >= 0) {
+            if (this.state.tokens > 0 && mixins >= 0 && this.state.cash > 0) {
                 let confirmed = window.confirm(`Are you sure you want to send ${e.target.amount.value} SFT (Safex Tokens), to ${e.target.destination.value}`);
                 console.log(confirmed);
                 if (confirmed) {
@@ -767,6 +769,10 @@ class WalletHome extends React.Component {
                         alert(`Error at the token transaction formation it was not committed`);
                     }
                 }
+            } else if (this.state.cash < 0.01) {
+                alert(`you will need some balance of SFX to pay the network fee to send tokens`);
+            } else if (this.state.tokens < 1) {
+                alert(`you do not have a token balance`);
             }
         } catch (err) {
             console.error(err);
@@ -826,7 +832,7 @@ class WalletHome extends React.Component {
         e.persist();
         try {
             let mixins = e.target.mixins.value - 1;
-            if (mixins >= 0) {
+            if (this.state.cash > 0 && mixins >= 0) {
                 let confirmed = window.confirm(`Are you sure you want to send ${e.target.amount.value} SFX (Safex Cash), ` +
                     `to ${e.target.destination.value}`);
                 console.log(confirmed);
@@ -862,6 +868,8 @@ class WalletHome extends React.Component {
                         alert(`Error at the cash transaction formation it was not committed`);
                     }
                 }
+            } else if (this.state.cash == 0) {
+                alert(`you do not have a cash balance`);
             }
         } catch (err) {
             console.error(err);
@@ -872,7 +880,6 @@ class WalletHome extends React.Component {
         }
     };
 
-    //SFXszkSYo4oH3iURSzYMxfaZkU8GFd3JHSRgoSrqkDUMMHNsv3iP6gGCAAerXJpUwtE18coAdnDY9WCWRkv27p5tKYcQgyrMxJT
     send_cash_async = async (wallet, destination, amount, mixins) => {
         return new Promise((resolve, reject) => {
             try {
@@ -1738,6 +1745,7 @@ class WalletHome extends React.Component {
         }
     };
 
+    //FETCH MESSAGES SELLER (FETCHMESSAGES)
     fetch_messages_seller = async (username, twm_api_url) => {
         try {
             if (this.state.twm_file.accounts.hasOwnProperty(username)) {
@@ -1789,7 +1797,7 @@ class WalletHome extends React.Component {
                                 try {
                                     let parsed = JSON.parse(decomped.toString());
                                     msg.message = decomped.toString();
-                                    console.log(`this is the decryped parsed message`);
+                                    console.log(`this is the decrypted parsed message`);
                                     console.log(parsed);
                                     if (msg.to === username) {
                                         if (twm_file.accounts[username].urls[twm_api_url].messages.hasOwnProperty(parsed.o)) {
@@ -1831,12 +1839,14 @@ class WalletHome extends React.Component {
                                                                         let l_price = 0;
                                                                         let l_quant = 0;
                                                                         for (const field of parsed_txn.parsed_fields) {
+                                                                            console.log(field.field);
+                                                                            console.log(field.value);
                                                                             if (field.field === 'offer_id') {
                                                                                 o_id = field.value;
                                                                             } else if (field.field === 'price') {
                                                                                 l_price = parseInt(field.value) / 10000000000;
                                                                             } else if (field.field === 'quantity') {
-                                                                                l_quant = field.value;
+                                                                                l_quant = parseInt(field.value);
                                                                             }
                                                                         }
                                                                         if (o_id === parsed.o) {
@@ -1865,7 +1875,6 @@ class WalletHome extends React.Component {
                                                         console.error(err);
                                                         console.error(`error at parsing the txn retreived`)
                                                     }
-
                                                 } catch (err) {
                                                     console.error(err);
                                                     console.error(`error fetching the transaction`);
@@ -1913,9 +1922,9 @@ class WalletHome extends React.Component {
                                                                             if (field.field === 'offer_id') {
                                                                                 o_id = field.value;
                                                                             } else if (field.field === 'price') {
-                                                                                l_price = field.price / 10000000000;
+                                                                                l_price = parseInt(field.value) / 10000000000;
                                                                             } else if (field.field === 'quantity') {
-                                                                                l_quant = field.quant;
+                                                                                l_quant = parseInt(field.value);
                                                                             }
                                                                         }
                                                                         if (o_id === parsed.o) {
@@ -2101,7 +2110,8 @@ class WalletHome extends React.Component {
                                 <span style={{color: '#0000004d'}}>
                                     {t_msg.position}
                                 </span>
-                                <span className={`message ${t_msg.from.startsWith('-----BEGIN') ? 'message--mine' : 'message--yours'}`}>{t_msg.message.m}</span>
+                                <span
+                                    className={`message ${t_msg.from.startsWith('-----BEGIN') ? 'message--mine' : 'message--yours'}`}>{t_msg.message.m}</span>
                             </div>
                         );
                     } else if (t_msg.message.hasOwnProperty('so')) {
@@ -2122,48 +2132,49 @@ class WalletHome extends React.Component {
                                                 {t_msg.position}
                                             </span>
                                             <div class="d-flex flex-column"
-                                            style={{
-                                                backgroundColor: '#d3d3d345',
-                                                padding: '10px',
-                                                borderRadius: '10px'}}>
+                                                 style={{
+                                                     backgroundColor: '#d3d3d345',
+                                                     padding: '10px',
+                                                     borderRadius: '10px'
+                                                 }}>
                                                 <div class="d-flex">
-                                                <label>First name:</label>
-                                                <span className="ml-2">{parsed_so.fn}</span>
+                                                    <label>First name:</label>
+                                                    <span className="ml-2">{parsed_so.fn}</span>
                                                 </div>
 
                                                 <div class="d-flex">
-                                                <label>Last name:</label>
-                                                <span className="ml-2">{parsed_so.ln}</span>
+                                                    <label>Last name:</label>
+                                                    <span className="ml-2">{parsed_so.ln}</span>
                                                 </div>
 
                                                 <div class="d-flex">
-                                                <label>Email:</label>
-                                                <span className="ml-2">{parsed_so.ea}</span>
+                                                    <label>Email:</label>
+                                                    <span className="ml-2">{parsed_so.ea}</span>
                                                 </div>
 
                                                 <div class="d-flex">
-                                                <label>Phone:</label>
-                                                <span className="ml-2">{parsed_so.ph}</span>
+                                                    <label>Phone:</label>
+                                                    <span className="ml-2">{parsed_so.ph}</span>
                                                 </div>
-                                            <div>
-                                                <label>Street Address:</label>
-                                                <span className="ml-2">{parsed_so.a1}</span>
-                                                </div>
-                                                <div class="d-flex">
-                                                <label>City:</label>
-                                                <span className="ml-2">{parsed_so.city}</span>
+                                                <div>
+                                                    <label>Street Address:</label>
+                                                    <span className="ml-2">{parsed_so.a1}</span>
                                                 </div>
                                                 <div class="d-flex">
-                                                <label>State:</label>
-                                                <span className="ml-2">{parsed_so.s}</span>
+                                                    <label>City:</label>
+                                                    <span className="ml-2">{parsed_so.city}</span>
                                                 </div>
                                                 <div class="d-flex">
-                                                <label>Area code:</label>
-                                                <span className="ml-2">{parsed_so.z}</span>
+                                                    <label>State:</label>
+                                                    <span className="ml-2">{parsed_so.s}</span>
                                                 </div>
                                                 <div class="d-flex">
-                                                <label>Country:</label>
-                                                <span className="ml-2">{parsed_so.c}</span>
+                                                    <label>Area code:</label>
+                                                    <span className="ml-2">{parsed_so.z}</span>
+                                                </div>
+                                                <div class="d-flex">
+                                                    <label>Country:</label>
+                                                    <span className="ml-2">{parsed_so.c}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2422,7 +2433,6 @@ class WalletHome extends React.Component {
                     }
                 }
             }
-
             // NOTE: Due to mutating state variable, we need to force a reload
             this.forceUpdate();
 
@@ -2626,373 +2636,375 @@ class WalletHome extends React.Component {
             alert(`there is no quantity left to buy`)
         } else {
 
-        if (e.target.quantity.value <= listing.quantity) {
+            if (e.target.quantity.value <= listing.quantity) {
 
-            console.log(listing);
-            console.log(e.target.quantity.value);
-            console.log(`mixins`);
-            console.log(e.target.mixins.value);
-            console.log(listing.username);
+                console.log(listing);
+                console.log(e.target.quantity.value);
+                console.log(`mixins`);
+                console.log(e.target.mixins.value);
+                console.log(listing.username);
 
-            let total_cost = quant * (listing.price);
-            console.log(`TOTAL COST!!!!!!!!`);
-            console.log(total_cost);
-            console.log(listing.price);
-            console.log(quant);
-            console.log(this.state.cash);
-            console.log(`listing quant ${listing.quantity}`)
+                let total_cost = quant * (listing.price);
+                console.log(`TOTAL COST!!!!!!!!`);
+                console.log(total_cost);
+                console.log(listing.price);
+                console.log(quant);
+                console.log(this.state.cash);
+                console.log(`listing quant ${listing.quantity}`)
 
-            let alert_bool = false;
-            let alert_text = ``;
+                let alert_bool = false;
+                let alert_text = ``;
 
-            if (quant < 1) {
-                alert_text += ` quantity can not be 0 or negative :)`;
-                alert_bool = true;
-            }
-            if (quant % 1 !== 0) {
-                alert_text += ` quantity must be a whole number :)`;
-                alert_bool = true;
-            }
-            if (Number.parseInt(quant) > listing.quantity) {
-                alert_text += ` not enough quantity available: you wanted ${quant} but there are only ${listing.quantity} available`;
-                alert_bool = true;
-            }
-            if (total_cost > this.state.cash) {
-                alert_text += ` not enough SFX available for this purchase: total cost: ${total_cost} SFX, your balance: ${this.state.cash.toLocaleString()} SFX`;
-                alert_bool = true;
-            }
+                if (quant < 1) {
+                    alert_text += ` quantity can not be 0 or negative :)`;
+                    alert_bool = true;
+                }
+                if (quant % 1 !== 0) {
+                    alert_text += ` quantity must be a whole number :)`;
+                    alert_bool = true;
+                }
+                if (Number.parseInt(quant) > listing.quantity) {
+                    alert_text += ` not enough quantity available: you wanted ${quant} but there are only ${listing.quantity} available`;
+                    alert_bool = true;
+                }
+                if (total_cost > this.state.cash) {
+                    alert_text += ` not enough SFX available for this purchase: total cost: ${total_cost} SFX, your balance: ${this.state.cash.toLocaleString()} SFX`;
+                    alert_bool = true;
+                }
 
-            if (alert_bool) {
-                alert(alert_text);
-            } else {
+                if (alert_bool) {
+                    alert(alert_text);
+                } else {
 
-                try {
-                    if (mixins >= 0) {
-                        let confirmed;
-                        let confirm_message = '';
-                        let open_message = '';
-                        let nft_address = '';
-                        let shipping = {};
+                    try {
+                        if (mixins >= 0) {
+                            let confirmed;
+                            let confirm_message = '';
+                            let open_message = '';
+                            let nft_address = '';
+                            let shipping = {};
 
-                        confirm_message = `Are you sure you want to purchase ${quant} X ${listing.title} for a total of ${total_cost} SFX?`;
+                            confirm_message = `Are you sure you want to purchase ${quant} X ${listing.title} for a total of ${total_cost} SFX?`;
 
-                        confirmed = window.confirm(confirm_message);
+                            confirmed = window.confirm(confirm_message);
 
-                        console.log(confirmed);
-                        if (confirmed) {
-                            try {
-                                console.log(listing.title);
-                                console.log(listing.offer_id);
-                                console.log(listing.price);
-                                console.log(total_cost);
-                                console.log(mixins);
-                                this.setState({
-                                    purchase_txn_image: listing.main_image,
-                                    purchase_txn_quantity: quant,
-                                    purchase_txn_title: listing.title,
-                                    purchase_txn_seller: listing.username,
-                                    purchase_txn_offerid: listing.offer_id,
-                                    purchase_txn_price: listing.price,
-                                    purchase_txn_total_cost: total_cost,
-                                    showLoader: true
-                                });
+                            console.log(confirmed);
+                            if (confirmed) {
+                                try {
+                                    console.log(listing.title);
+                                    console.log(listing.offer_id);
+                                    console.log(listing.price);
+                                    console.log(total_cost);
+                                    console.log(mixins);
+                                    this.setState({
+                                        purchase_txn_image: listing.main_image,
+                                        purchase_txn_quantity: quant,
+                                        purchase_txn_title: listing.title,
+                                        purchase_txn_seller: listing.username,
+                                        purchase_txn_offerid: listing.offer_id,
+                                        purchase_txn_price: listing.price,
+                                        purchase_txn_total_cost: total_cost,
+                                        showLoader: true
+                                    });
 
-                                let purchase_txn = await this.purchase_offer_async(
-                                    wallet,
-                                    total_cost,
-                                    listing.offer_id,
-                                    quant,
-                                    mixins
-                                );
+                                    let purchase_txn = await this.purchase_offer_async(
+                                        wallet,
+                                        total_cost,
+                                        listing.offer_id,
+                                        quant,
+                                        mixins
+                                    );
 
-                                let confirmed_fee = window.confirm(`The fee to send this transaction will be:  ${purchase_txn.fee() / 10000000000}SFX`);
-                                let fee = purchase_txn.fee();
-                                let txid = purchase_txn.transactionsIds();
-                                console.log(txid);
-                                if (confirmed_fee) {
-                                    try {
-                                        this.setState({purchase_txn_id: txid, purchase_txn_fee: fee});
+                                    let confirmed_fee = window.confirm(`The fee to send this transaction will be:  ${purchase_txn.fee() / 10000000000}SFX`);
+                                    let fee = purchase_txn.fee();
+                                    let txid = purchase_txn.transactionsIds();
+                                    console.log(txid);
+                                    if (confirmed_fee) {
+                                        try {
+                                            this.setState({purchase_txn_id: txid, purchase_txn_fee: fee});
 
-                                        if (this.state.offer_loading_flag === 'twmurl') {
-                                            try {
-                                                if (listing.nft === true) {
-                                                    confirm_message += ` sent to eth address ${e.target.eth_address.value}`;
-                                                    nft_address = va.eth_address.value;
-                                                }
-                                                if (listing.shipping === true) {
-                                                    //complete confirm message for all fields
-                                                    if (va.first_name.value.length > 0) {
-                                                        shipping.fn = e.target.first_name.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
+                                            if (this.state.offer_loading_flag === 'twmurl') {
+                                                try {
+                                                    if (listing.nft === true) {
+                                                        confirm_message += ` sent to eth address ${e.target.eth_address.value}`;
+                                                        nft_address = va.eth_address.value;
                                                     }
-                                                    if (va.last_name.value.length > 0) {
-                                                        shipping.ln = e.target.last_name.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.address1.value.length > 0) {
-                                                        shipping.a1 = e.target.address1.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.address2.value.length > 0) {
-                                                        shipping.a2 = e.target.address2.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.city.value.length > 0) {
-                                                        shipping.city = e.target.city.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.state.value.length > 0) {
-                                                        shipping.s = e.target.state.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.zipcode.value.length > 0) {
-                                                        shipping.z = e.target.zipcode.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.country.value.length > 0) {
-                                                        shipping.c = e.target.country.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.email_address.value.length > 0) {
-                                                        shipping.ea = e.target.email_address.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    if (va.phone_number.value.length > 0) {
-                                                        shipping.ph = e.target.phone_number.value;
-                                                    } else {
-                                                        //figure out how to break out of this channel
-                                                    }
-                                                    confirm_message += ` delivered physical property to ${e.target.first_name.value}`;
-                                                }
-                                                if (listing.open_message === true) {
-                                                    let o_m = e.target.open_message.value;
-                                                    if (o_m.length > 0 && o_m < 400) {
-                                                        confirm_message += ` ${e.target.open_message.value}`;
-                                                        open_message = e.target.open_message.value;
-                                                    } else {
-                                                        //too many characters
-                                                    }
-                                                }
-
-                                                let twm_confirm = window.confirm(confirm_message);
-
-                                                if (twm_confirm) {
-                                                    let twm_file = this.state.twm_file;
-
-                                                    let seller_pubkey = await get_seller_pubkey(listing.username, this.state.api_url);
-
-                                                    console.log(seller_pubkey);
-
-                                                    const crypto = window.require('crypto');
-
-                                                    const {privateKey, publicKey} = await crypto.generateKeyPairSync('rsa', {
-                                                        modulusLength: 4096,
-                                                        publicKeyEncoding: {
-                                                            type: 'pkcs1',
-                                                            format: 'pem'
-                                                        },
-                                                        privateKeyEncoding: {
-                                                            type: 'pkcs8',
-                                                            format: 'pem',
-                                                        }
-                                                    });
-
-                                                    let api_file_url_offer_id;
-
-                                                    if (twm_file.api.urls.hasOwnProperty(this.state.api_url)) {
-                                                        if (twm_file.api.urls[this.state.api_url].hasOwnProperty(listing.offer_id)) {
-                                                            //generate a new pgp key
-                                                            let api_file_url = twm_file.api.urls[this.state.api_url];
-                                                            api_file_url_offer_id = api_file_url[listing.offer_id];
-
+                                                    if (listing.shipping === true) {
+                                                        //complete confirm message for all fields
+                                                        if (va.first_name.value.length > 0) {
+                                                            shipping.fn = e.target.first_name.value;
                                                         } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.last_name.value.length > 0) {
+                                                            shipping.ln = e.target.last_name.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.address1.value.length > 0) {
+                                                            shipping.a1 = e.target.address1.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.address2.value.length > 0) {
+                                                            shipping.a2 = e.target.address2.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.city.value.length > 0) {
+                                                            shipping.city = e.target.city.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.state.value.length > 0) {
+                                                            shipping.s = e.target.state.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.zipcode.value.length > 0) {
+                                                            shipping.z = e.target.zipcode.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.country.value.length > 0) {
+                                                            shipping.c = e.target.country.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.email_address.value.length > 0) {
+                                                            shipping.ea = e.target.email_address.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        if (va.phone_number.value.length > 0) {
+                                                            shipping.ph = e.target.phone_number.value;
+                                                        } else {
+                                                            //figure out how to break out of this channel
+                                                        }
+                                                        confirm_message += ` delivered physical property to ${e.target.first_name.value}`;
+                                                    }
+                                                    if (listing.open_message === true) {
+                                                        let o_m = e.target.open_message.value;
+                                                        if (o_m.length > 0 && o_m < 400) {
+                                                            confirm_message += ` ${e.target.open_message.value}`;
+                                                            open_message = e.target.open_message.value;
+                                                        } else {
+                                                            //too many characters
+                                                        }
+                                                    }
+
+                                                    let twm_confirm = window.confirm(confirm_message);
+
+                                                    if (twm_confirm) {
+                                                        let twm_file = this.state.twm_file;
+
+                                                        let seller_pubkey = await get_seller_pubkey(listing.username, this.state.api_url);
+
+                                                        console.log(seller_pubkey);
+
+                                                        const crypto = window.require('crypto');
+
+                                                        const {
+                                                            privateKey,
+                                                            publicKey
+                                                        } = await crypto.generateKeyPairSync('rsa', {
+                                                            modulusLength: 4096,
+                                                            publicKeyEncoding: {
+                                                                type: 'pkcs1',
+                                                                format: 'pem'
+                                                            },
+                                                            privateKeyEncoding: {
+                                                                type: 'pkcs8',
+                                                                format: 'pem',
+                                                            }
+                                                        });
+
+                                                        let api_file_url_offer_id;
+
+                                                        if (twm_file.api.urls.hasOwnProperty(this.state.api_url)) {
+                                                            if (twm_file.api.urls[this.state.api_url].hasOwnProperty(listing.offer_id)) {
+                                                                //generate a new pgp key
+                                                                let api_file_url = twm_file.api.urls[this.state.api_url];
+                                                                api_file_url_offer_id = api_file_url[listing.offer_id];
+
+                                                            } else {
+                                                                let api_file_url = twm_file.api.urls[this.state.api_url];
+                                                                api_file_url[listing.offer_id] = {};
+                                                                api_file_url_offer_id = api_file_url[listing.offer_id];
+                                                            }
+                                                        } else {
+                                                            //if the api was never yet before saved
+                                                            twm_file.api.urls[this.state.api_url] = {};
                                                             let api_file_url = twm_file.api.urls[this.state.api_url];
                                                             api_file_url[listing.offer_id] = {};
                                                             api_file_url_offer_id = api_file_url[listing.offer_id];
                                                         }
-                                                    } else {
-                                                        //if the api was never yet before saved
-                                                        twm_file.api.urls[this.state.api_url] = {};
-                                                        let api_file_url = twm_file.api.urls[this.state.api_url];
-                                                        api_file_url[listing.offer_id] = {};
-                                                        api_file_url_offer_id = api_file_url[listing.offer_id];
-                                                    }
 
-                                                    let order_id_string = publicKey + listing.offer_id + this.state.blockchain_height;
-                                                    let order_id_hash = keccak256(order_id_string).toString('hex');
-                                                    api_file_url_offer_id[order_id_hash] = {};
+                                                        let order_id_string = publicKey + listing.offer_id + this.state.blockchain_height;
+                                                        let order_id_hash = keccak256(order_id_string).toString('hex');
+                                                        api_file_url_offer_id[order_id_hash] = {};
 
-                                                    let message_header_obj = {};
-                                                    message_header_obj.sender_pgp_pub_key = publicKey;
-                                                    message_header_obj.to = listing.username;
-                                                    message_header_obj.from = publicKey;
-                                                    message_header_obj.order_id = order_id_hash;
-                                                    message_header_obj.purchase_proof = txid[0];
-                                                    message_header_obj.bc_height = this.state.blockchain_height;
+                                                        let message_header_obj = {};
+                                                        message_header_obj.sender_pgp_pub_key = publicKey;
+                                                        message_header_obj.to = listing.username;
+                                                        message_header_obj.from = publicKey;
+                                                        message_header_obj.order_id = order_id_hash;
+                                                        message_header_obj.purchase_proof = txid[0];
+                                                        message_header_obj.bc_height = this.state.blockchain_height;
 
-                                                    let pre_sign_message_obj = {};
-                                                    pre_sign_message_obj.s = ''; //subject
-                                                    pre_sign_message_obj.o = listing.offer_id; //offer_id
-                                                    pre_sign_message_obj.m = open_message; //open_message contents
-                                                    pre_sign_message_obj.n = nft_address; //nft address
-                                                    pre_sign_message_obj.so = JSON.stringify(shipping); //shipping object
+                                                        let pre_sign_message_obj = {};
+                                                        pre_sign_message_obj.s = ''; //subject
+                                                        pre_sign_message_obj.o = listing.offer_id; //offer_id
+                                                        pre_sign_message_obj.m = open_message; //open_message contents
+                                                        pre_sign_message_obj.n = nft_address; //nft address
+                                                        pre_sign_message_obj.so = JSON.stringify(shipping); //shipping object
 
-                                                    message_header_obj.message_hash = keccak256(JSON.stringify(pre_sign_message_obj)).toString('hex');
+                                                        message_header_obj.message_hash = keccak256(JSON.stringify(pre_sign_message_obj)).toString('hex');
 
-                                                    message_header_obj.message_signature = '';
+                                                        message_header_obj.message_signature = '';
 
-                                                    let pres_sign_string = JSON.stringify(pre_sign_message_obj);
+                                                        let pres_sign_string = JSON.stringify(pre_sign_message_obj);
 
-                                                    const signature = crypto.sign("sha256", Buffer.from(pres_sign_string), {
-                                                        key: privateKey,
-                                                        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-                                                    });
+                                                        const signature = crypto.sign("sha256", Buffer.from(pres_sign_string), {
+                                                            key: privateKey,
+                                                            padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+                                                        });
 
-                                                    message_header_obj.message_signature = signature;
+                                                        message_header_obj.message_signature = signature;
 
-                                                    let compressed_message_obj = zlib.deflateSync(Buffer.from(JSON.stringify(pre_sign_message_obj)));
+                                                        let compressed_message_obj = zlib.deflateSync(Buffer.from(JSON.stringify(pre_sign_message_obj)));
 
-                                                    console.log(": " + compressed_message_obj.length + " characters, " +
-                                                        Buffer.byteLength((compressed_message_obj), 'utf8') + " bytes");
+                                                        console.log(": " + compressed_message_obj.length + " characters, " +
+                                                            Buffer.byteLength((compressed_message_obj), 'utf8') + " bytes");
 
-                                                    let found_key = crypto.createPublicKey(seller_pubkey.user.pgp_key);
+                                                        let found_key = crypto.createPublicKey(seller_pubkey.user.pgp_key);
 
-                                                    let encrypted_message = crypto.publicEncrypt(
-                                                        {
-                                                            key: found_key,
-                                                            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-                                                            oaepHash: "sha256",
-                                                        },
-                                                        compressed_message_obj
-                                                    );
+                                                        let encrypted_message = crypto.publicEncrypt(
+                                                            {
+                                                                key: found_key,
+                                                                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                                                                oaepHash: "sha256",
+                                                            },
+                                                            compressed_message_obj
+                                                        );
 
-                                                    let hex_enc_msg = this.byteToHexString(encrypted_message);
+                                                        let hex_enc_msg = this.byteToHexString(encrypted_message);
 
-                                                    const enc_signature = crypto.sign("sha256", Buffer.from(encrypted_message), {
-                                                        key: privateKey,
-                                                        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-                                                    });
+                                                        const enc_signature = crypto.sign("sha256", Buffer.from(encrypted_message), {
+                                                            key: privateKey,
+                                                            padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+                                                        });
 
-                                                    let hex_enc_sig = this.byteToHexString(enc_signature);
+                                                        let hex_enc_sig = this.byteToHexString(enc_signature);
 
-                                                    message_header_obj.encrypted_message_signature = hex_enc_sig;
+                                                        message_header_obj.encrypted_message_signature = hex_enc_sig;
 
-                                                    message_header_obj.encrypted_message = hex_enc_msg;
+                                                        message_header_obj.encrypted_message = hex_enc_msg;
 
-                                                    let tdispatched = await dispatch_purchase_message(message_header_obj, this.state.api_url);
+                                                        let tdispatched = await dispatch_purchase_message(message_header_obj, this.state.api_url);
 
-                                                    console.log(tdispatched);
+                                                        console.log(tdispatched);
 
-                                                    message_header_obj.message = pre_sign_message_obj;
+                                                        message_header_obj.message = pre_sign_message_obj;
 
-                                                    let purchase_obj = {};
-                                                    purchase_obj.api_url = this.state.api_url;
-                                                    purchase_obj.offer_id = listing.offer_id;
-                                                    purchase_obj.title = listing.title;
-                                                    purchase_obj.price = listing.price;
-                                                    purchase_obj.quantity = quant;
-                                                    purchase_obj.bc_height = message_header_obj.bc_height;
-                                                    api_file_url_offer_id[order_id_hash].pgp_keys = {
-                                                        private_key: privateKey,
-                                                        public_key: publicKey
-                                                    };
-                                                    api_file_url_offer_id[order_id_hash].messages = {};
-                                                    api_file_url_offer_id[order_id_hash].purchase_obj = purchase_obj;
-                                                    api_file_url_offer_id[order_id_hash].messages['1'] = message_header_obj;
+                                                        let purchase_obj = {};
+                                                        purchase_obj.api_url = this.state.api_url;
+                                                        purchase_obj.offer_id = listing.offer_id;
+                                                        purchase_obj.title = listing.title;
+                                                        purchase_obj.price = listing.price;
+                                                        purchase_obj.quantity = quant;
+                                                        purchase_obj.bc_height = message_header_obj.bc_height;
+                                                        api_file_url_offer_id[order_id_hash].pgp_keys = {
+                                                            private_key: privateKey,
+                                                            public_key: publicKey
+                                                        };
+                                                        api_file_url_offer_id[order_id_hash].messages = {};
+                                                        api_file_url_offer_id[order_id_hash].purchase_obj = purchase_obj;
+                                                        api_file_url_offer_id[order_id_hash].messages['1'] = message_header_obj;
 
-                                                    console.log(twm_file);
-                                                    try {
-
-                                                        const crypto = window.require('crypto');
-                                                        const algorithm = 'aes-256-ctr';
-                                                        console.log(this.state.password);
-                                                        const cipher = crypto.createCipher(algorithm, this.state.password.toString());
-                                                        let crypted = cipher.update(JSON.stringify(twm_file), 'utf8', 'hex');
-                                                        crypted += cipher.final('hex');
-
-                                                        const hash1 = crypto.createHash('sha256');
-                                                        hash1.update(JSON.stringify(twm_file));
-                                                        console.log(`password ${this.state.password}`);
-                                                        console.log(JSON.stringify(twm_file));
-
-                                                        let twm_save = await save_twm_file(this.state.new_path + '.twm', crypted, this.state.password, hash1.digest('hex'));
-
+                                                        console.log(twm_file);
                                                         try {
-                                                            let opened_twm_file = await open_twm_file(this.state.new_path + '.twm', this.state.password);
-                                                            console.log(opened_twm_file);
 
-                                                            localStorage.setItem('twm_file', twm_file);
+                                                            const crypto = window.require('crypto');
+                                                            const algorithm = 'aes-256-ctr';
+                                                            console.log(this.state.password);
+                                                            const cipher = crypto.createCipher(algorithm, this.state.password.toString());
+                                                            let crypted = cipher.update(JSON.stringify(twm_file), 'utf8', 'hex');
+                                                            crypted += cipher.final('hex');
 
-                                                            this.setState({twm_file: twm_file});
+                                                            const hash1 = crypto.createHash('sha256');
+                                                            hash1.update(JSON.stringify(twm_file));
+                                                            console.log(`password ${this.state.password}`);
+                                                            console.log(JSON.stringify(twm_file));
 
+                                                            let twm_save = await save_twm_file(this.state.new_path + '.twm', crypted, this.state.password, hash1.digest('hex'));
+
+                                                            try {
+                                                                let opened_twm_file = await open_twm_file(this.state.new_path + '.twm', this.state.password);
+                                                                console.log(opened_twm_file);
+
+                                                                localStorage.setItem('twm_file', twm_file);
+
+                                                                this.setState({twm_file: twm_file});
+
+                                                            } catch (err) {
+                                                                this.setState({showLoader: false});
+                                                                console.error(err);
+                                                                console.error(`error opening twm file after save to verify`);
+                                                                alert(`Error at saving to the twm file during account creation verification stage`);
+                                                            }
                                                         } catch (err) {
                                                             this.setState({showLoader: false});
                                                             console.error(err);
-                                                            console.error(`error opening twm file after save to verify`);
-                                                            alert(`Error at saving to the twm file during account creation verification stage`);
+                                                            console.error(`error at initial save of the twm file`);
+                                                            alert(`Error at saving to the twm file during account creation initialization stage`);
                                                         }
-                                                    } catch (err) {
-                                                        this.setState({showLoader: false});
-                                                        console.error(err);
-                                                        console.error(`error at initial save of the twm file`);
-                                                        alert(`Error at saving to the twm file during account creation initialization stage`);
+                                                        console.log(`payments from twm_url`);
+                                                        let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
+                                                        console.log(`purchase transaction committed`);
+                                                        alert(`The purchase has been submitted`);
                                                     }
-                                                    console.log(`payments from twm_url`);
-                                                    let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
-                                                    console.log(`purchase transaction committed`);
-                                                    alert(`The purchase has been submitted`);
+                                                } catch (err) {
+                                                    this.setState({showLoader: false});
+                                                    alert(`Error at getting the sellers public key from the api server`);
+                                                    console.error(err);
+                                                    console.error(`error at getting the sellers public key from the api server`);
                                                 }
-                                            } catch (err) {
-                                                this.setState({showLoader: false});
-                                                alert(`Error at getting the sellers public key from the api server`);
-                                                console.error(err);
-                                                console.error(`error at getting the sellers public key from the api server`);
+                                            } else {
+                                                let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
+                                                console.log(`purchase transaction committed`);
                                             }
-                                        } else {
-                                            let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
-                                            console.log(`purchase transaction committed`);
+                                        } catch (err) {
+                                            this.setState({showLoader: false});
+                                            console.error(err);
+                                            console.error(`error when trying to commit the purchase transaction to the blockchain`);
+                                            alert(`error when trying to commit the purchase transaction to the blockchain`);
                                         }
-                                    } catch (err) {
+                                    } else {
                                         this.setState({showLoader: false});
-                                        console.error(err);
-                                        console.error(`error when trying to commit the purchase transaction to the blockchain`);
-                                        alert(`error when trying to commit the purchase transaction to the blockchain`);
+                                        console.log("purchase transaction cancelled");
                                     }
-                                } else {
+                                } catch (err) {
                                     this.setState({showLoader: false});
-                                    console.log("purchase transaction cancelled");
+                                    console.error(err);
+                                    console.error(`error at the purchase transaction formation it was not commited`);
+                                    alert(`error at the purchase transaction formation it was not commited`);
                                 }
-                            } catch (err) {
-                                this.setState({showLoader: false});
-                                console.error(err);
-                                console.error(`error at the purchase transaction formation it was not commited`);
-                                alert(`error at the purchase transaction formation it was not commited`);
                             }
+                            this.setState({showLoader: false});
                         }
+                    } catch (err) {
                         this.setState({showLoader: false});
+                        console.error(err);
+                        if (err.toString().startsWith('not enough outputs')) {
+                            alert(`Choose fewer mixins`);
+                        }
+                        console.error(`Error at the purchase transaction`);
                     }
-                } catch (err) {
-                    this.setState({showLoader: false});
-                    console.error(err);
-                    if (err.toString().startsWith('not enough outputs')) {
-                        alert(`Choose fewer mixins`);
-                    }
-                    console.error(`Error at the purchase transaction`);
                 }
+            } else {
+                alert(`You can not have 0 quantity for purchase.`);
             }
-        } else {
-            alert(`You can not have 0 quantity for purchase.`);
-        }
-
         }
     };
 
@@ -3048,8 +3060,6 @@ class WalletHome extends React.Component {
         e.persist();
         console.log(`let's edit the offer`);
         let va = e.target;
-
-
         let o_obj = {};
         o_obj.twm_version = 1;
 
@@ -3197,7 +3207,7 @@ class WalletHome extends React.Component {
     };
 
     handleShowOffers = () => {
-            this.setState({merchantTabs: 'offers'});
+        this.setState({merchantTabs: 'offers'});
     }
 
     handleShowMessages = (messageObject) => {
@@ -3277,8 +3287,34 @@ class WalletHome extends React.Component {
                                 />
                             </Col>
 
-                            <Col sm={7} className="no-padding d-flex flex-column  justify-content-between">
+                            <Col sm={8} className="no-padding d-flex flex-column  justify-content-between">
                                 {this.renderAddressComponent()}
+                                    <div className="d-flex align-items-center py-3"
+                                         style={{width: '90%', backgroundColor: 'white'}}>
+                                        <form className="flex-row" id="search-form" action="" method="">
+                                            <input
+                                                style={{height: '30px', width: '300px', paddingLeft: '10px'}}
+                                                type="text"
+                                                onChange={this.handle_change_api_fetch_url}
+                                                value="https://api.theworldmarketplace.com"/>
+
+                                            <button
+                                                style={{padding: '1rem', lineHeight: 0}}
+                                                onClick={this.load_offers_from_api} className="search-button ml-3">
+                                                Show Products
+                                            </button>
+                                            <button type="button" onClick={this.handleBuyerOrders}
+                                                    style={{padding: '1rem', lineHeight: 0}}
+                                                    className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}>
+                                                {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
+                                            </button>
+                                            <AiOutlineInfoCircle className="ml-2" size={20} data-tip
+                                                                 data-for='apiInfo'/>
+                                            <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
+                                            </ReactTooltip>
+                                        </form>
+                                    </div>
                             </Col>
                         </div>
                     );
@@ -3304,33 +3340,48 @@ class WalletHome extends React.Component {
                                 data.nft = listing.nft;
                                 data.open_message = listing.open_message;
                                 let offer_type = 'none';
-                                if (listing.shipping == true) { offer_type = 'shipped';}
-                                else if (listing.nft == true) { offer_type = 'nft';}
-                                else if (listing.open_message == true) { offer_type = 'open';}
+                                if (listing.shipping == true) {
+                                    offer_type = 'shipped';
+                                } else if (listing.nft == true) {
+                                    offer_type = 'nft';
+                                } else if (listing.open_message == true) {
+                                    offer_type = 'open';
+                                }
                                 try {
                                     return (
                                         <div className="products-table-row d-flex" key={key}>
-                                            <div className="d-flex align-items-center justify-content-center" style={{width: '128px', height: '128px', backgroundColor: '#d3d3d34a'}}>
-                                                {listing.main_image ? <img width="128px" height="128px" src={listing.main_image} /> : <span style={{color: '#afafaf'}}>no product image</span>}
+                                            <div className="d-flex align-items-center justify-content-center" style={{
+                                                width: '128px',
+                                                height: '128px',
+                                                backgroundColor: '#d3d3d34a'
+                                            }}>
+                                                {listing.main_image ?
+                                                    <img width="128px" height="128px" src={listing.main_image}/> :
+                                                    <span style={{color: '#afafaf'}}>no product image</span>}
                                             </div>
-                                            <div className="p-2" style={{width: '200px'}} data-tip data-for={`offerTitle${key}`}>
+                                            <div className="p-2" style={{width: '200px'}} data-tip
+                                                 data-for={`offerTitle${key}`}>
                                                 {listing.title}
                                             </div>
                                             <div style={{width: '100px'}}>{offer_type}</div>
 
                                             <div className="d-flex align-items-center" style={{width: '150px'}}>
-                                                {listing.price} <img width="20px" className="ml-2" src={sfxLogo} /></div>
+                                                {listing.price} <img width="20px" className="ml-2" src={sfxLogo}/></div>
 
                                             <div style={{width: '150px'}}>{listing.quantity}</div>
 
                                             <div style={{width: '100px'}}>{listing.username}</div>
 
-                                            <div className="d-flex align-items-center" style={{width: '100px'}} data-tip data-for={`offerID${key}`}>
+                                            <div className="d-flex align-items-center" style={{width: '100px'}} data-tip
+                                                 data-for={`offerID${key}`}>
                                                 {this.to_ellipsis(listing.offer_id, 5, 5)}
-                                                    <CgCopy className="ml-1" onClick={() => {copy(listing.offer_id); alert('Offer ID has been copied to clipboard')}} size={15} />
+                                                <CgCopy className="ml-1" onClick={() => {
+                                                    copy(listing.offer_id);
+                                                    alert('Offer ID has been copied to clipboard')
+                                                }} size={15}/>
                                                 <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
-                                                <span>{listing.offer_id}</span>
-                                            </ReactTooltip>
+                                                    <span>{listing.offer_id}</span>
+                                                </ReactTooltip>
                                             </div>
 
                                             <div style={{width: '100px'}}>
@@ -3386,7 +3437,7 @@ class WalletHome extends React.Component {
                                         className="pointer"
                                         style={{position: 'absolute', right: '15px', color: 'red'}}
                                         size={20}
-                                        onClick={this.handleClosePurchaseForm} /></div>
+                                        onClick={this.handleClosePurchaseForm}/></div>
 
                                 <Form id="purchase_item"
                                       onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
@@ -3395,102 +3446,101 @@ class WalletHome extends React.Component {
                                         {this.state.show_purchase_offer_data.nft ?
                                             (<div style={{width: '300px'}} className="d-flex flex-column mt-2">
                                                 <label>
-                                                    NFT Ethereum Address
+                                                    NFT Receive Address
                                                 </label>
-                                                    <Form.Control name="eth_address" rows="3"/>
+                                                <Form.Control name="eth_address" rows="3"/>
                                             </div>)
                                             :
                                             ''
                                         }
 
                                         {this.state.show_purchase_offer_data.shipping &&
-                                        <>
-                                        <h2>Shipping Info</h2>
-                                        <div className="d-flex justify-content-between mt-3">
-                                        <div style={{width: '45%'}} className="d-flex flex-column">
-                                        <label>First Name:</label>
-                                        <Form.Control name="first_name" />
+                                        <div>
+                                            <h2>Shipping Info</h2>
+                                            <div className="d-flex justify-content-between mt-3">
+                                                <div style={{width: '45%'}} className="d-flex flex-column">
+                                                    <label>First Name:</label>
+                                                    <Form.Control name="first_name"/>
+                                                </div>
+
+                                                <div style={{width: '45%'}} className="d-flex flex-column">
+                                                    <label>Last Name:</label>
+                                                    <Form.Control name="last_name"/>
+                                                </div>
+                                            </div>
+
+                                            <div style={{width: '90%'}} className="d-flex flex-column mt-3">
+                                                <label>Address Line 1:</label>
+                                                <Form.Control name="address1"/>
+                                            </div>
+
+                                            <div style={{width: '90%'}} className="d-flex flex-column mt-3">
+                                                <label>Address Line 2:</label>
+                                                <Form.Control name="address2"/>
+                                            </div>
+
+                                            <div className="d-flex justify-content-between mt-3">
+                                                <div style={{width: '30%'}} className="d-flex flex-column">
+                                                    <label>City:</label>
+                                                    <Form.Control name="city"/>
+                                                </div>
+
+                                                <div style={{width: '30%'}} className="d-flex flex-column">
+                                                    <label>State/Country:</label>
+                                                    <Form.Control name="state"/>
+                                                </div>
+
+                                                <div style={{width: '30%'}} className="d-flex flex-column">
+                                                    <label>Zip/Area code:</label>
+                                                    <Form.Control name="zipcode"/>
+                                                </div>
+                                            </div>
+
+                                            <div className="d-flex flex-column mt-3">
+                                                <label>Country:</label>
+                                                <Form.Control name="country"/>
+                                            </div>
+
+                                            <div className="d-flex flex-column mt-3">
+                                                <label>Email:</label>
+                                                <Form.Control type="email" name="email_address"/>
+                                            </div>
+
+                                            <div className="d-flex flex-column mt-3">
+                                                <label>Phone:</label>
+                                                <Form.Control name="phone_number"/>
+                                            </div>
                                         </div>
-
-                                    <div style={{width: '45%'}} className="d-flex flex-column">
-                                        <label>Last Name:</label>
-                                        <Form.Control name="last_name" />
-                                    </div>
-                                        </div>
-
-                                    <div className="d-flex flex-column mt-3">
-                                        <label>Address Line 1:</label>
-                                        <Form.Control name="address1" />
-                                    </div>
-
-                                    <div className="d-flex flex-column mt-3">
-                                        <label>Address Line 2:</label>
-                                        <Form.Control name="address2" />
-                                    </div>
-
-                                    <div className="d-flex justify-content-between mt-3">
-                                    <div style={{width: '30%'}} className="d-flex flex-column">
-                                        <label>City:</label>
-                                        <Form.Control name="city" />
-                                    </div>
-
-                                    <div style={{width: '30%'}} className="d-flex flex-column">
-                                        <label>State/Country:</label>
-                                        <Form.Control name="state" />
-                                    </div>
-
-                                    <div style={{width: '30%'}} className="d-flex flex-column">
-                                        <label>Zip/Area code:</label>
-                                        <Form.Control name="zipcode" />
-                                    </div>
-                                    </div>
-
-                                    <div className="d-flex flex-column mt-3">
-                                        <label>Country:</label>
-                                        <Form.Control name="country" />
-                                    </div>
-
-                                    <div className="d-flex flex-column mt-3">
-                                        <label>Email:</label>
-                                        <Form.Control type="email" name="email_address" />
-                                    </div>
-
-                                    <div className="d-flex flex-column mt-3">
-                                        <label>Phone:</label>
-                                        <Form.Control name="phone_number" />
-                                    </div>
-                                    </>
                                         }
                                         {this.state.show_purchase_offer_data.open_message &&
                                         <div style={{width: '300px'}} className="d-flex flex-column mt-3">
-                                        <label>NFT Ethereum Address:</label>
-                                        <Form.Control name="message" />
-                                    </div>
+                                            <label>NFT Ethereum Address:</label>
+                                            <Form.Control name="message"/>
+                                        </div>
                                         }
 
                                         <div className="d-flex align-items-center mt-3">
-                                        <label className="d-flex align-items-center">
-                                            Mixins:
-                                            <IconContext.Provider value={{color: 'black', size: '20px'}}>
-                                                <FaInfoCircle data-tip data-for='apiInfo'
-                                                              className="blockchain-icon mx-4"/>
+                                            <label className="d-flex align-items-center">
+                                                Mixins:
+                                                <IconContext.Provider value={{color: 'black', size: '20px'}}>
+                                                    <FaInfoCircle data-tip data-for='apiInfo'
+                                                                  className="blockchain-icon mx-4"/>
 
-                                                <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
                                                                     Mixins are transactions that have also been sent on the Safex blockchain. <br/>
                                                                     They are combined with yours for private transactions.<br/>
                                                                     Changing this from the default could hurt your privacy.<br/>
                                                                 </span>
-                                                </ReactTooltip>
-                                            </IconContext.Provider>
-                                        </label>
+                                                    </ReactTooltip>
+                                                </IconContext.Provider>
+                                            </label>
                                             <Form.Control
                                                 className="ml-2"
                                                 style={{width: "50px"}}
                                                 name="mixins"
                                                 as="select"
-                                                defaultValue="7"
-                                            >
+                                                defaultValue="7">
                                                 <option>1</option>
                                                 <option>2</option>
                                                 <option>3</option>
@@ -3499,29 +3549,29 @@ class WalletHome extends React.Component {
                                                 <option>6</option>
                                                 <option>7</option>
                                             </Form.Control>
+                                        </div>
                                     </div>
-                                    </div>
-                                          <div className="d-flex flex-column">
-                                              <div className="d-flex" style={{height: '128px'}}>
-                                              {this.state.show_purchase_offer_data.main_image && <Image
-                                            className="product-image pointer"
-                                               src={this.state.show_purchase_offer_data.main_image}
-                                               onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.main_image})}></Image>}
+                                    <div className="d-flex flex-column">
+                                        <div className="d-flex" style={{height: '128px'}}>
+                                            {this.state.show_purchase_offer_data.main_image && <Image
+                                                className="product-image pointer"
+                                                src={this.state.show_purchase_offer_data.main_image}
+                                                onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.main_image})}></Image>}
 
                                             {this.state.show_purchase_offer_data.image_2 &&
-                                                <Image className="product-image pointer ml-1"
-                                                    src={this.state.show_purchase_offer_data.image_2}
-                                                    onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_2})}></Image>}
+                                            <Image className="product-image pointer ml-1"
+                                                   src={this.state.show_purchase_offer_data.image_2}
+                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_2})}></Image>}
 
                                             {this.state.show_purchase_offer_data.image_3 &&
-                                                <Image className="product-image pointer ml-1"
-                                                    src={this.state.show_purchase_offer_data.image_3}
-                                                    onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_3})}></Image>}
+                                            <Image className="product-image pointer ml-1"
+                                                   src={this.state.show_purchase_offer_data.image_3}
+                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_3})}></Image>}
 
                                             {this.state.show_purchase_offer_data.image_4 &&
-                                                <Image className="product-image pointer ml-1"
-                                                    src={this.state.show_purchase_offer_data.image_4}
-                                                    onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}
+                                            <Image className="product-image pointer ml-1"
+                                                   src={this.state.show_purchase_offer_data.image_4}
+                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}
                                             <ReactModal
                                                 isOpen={!!this.state.show_modal_for_image}
                                                 onRequestClose={() => this.setState({show_modal_for_image: null})}
@@ -3542,18 +3592,23 @@ class WalletHome extends React.Component {
                                                         marginRight: '-50%',
                                                         transform: 'translate(-50%, -50%)'
                                                     }
-                                                }}
-                                                >
-                                    <CgClose
-                                        className="pointer bg-white"
-                                        style={{position: 'absolute', top: '5px', right: '15px', color: 'red'}}
-                                        size={20}
-                                        onClick={()=> this.setState({show_modal_for_image: null})} />
-                                                    <div className="mt-4">
-                                                        <img style={{maxHeight: '90vh', maxWidth: '95%'}} src={this.state.show_modal_for_image} />
-                                                    </div>
+                                                }}>
+                                                <CgClose
+                                                    className="pointer bg-white"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: '5px',
+                                                        right: '15px',
+                                                        color: 'red'
+                                                    }}
+                                                    size={20}
+                                                    onClick={() => this.setState({show_modal_for_image: null})}/>
+                                                <div className="mt-4">
+                                                    <img style={{maxHeight: '90vh', maxWidth: '95%'}}
+                                                         src={this.state.show_modal_for_image}/>
+                                                </div>
                                             </ReactModal>
-                                              </div>
+                                        </div>
 
                                         <hr className="border border-light w-100"></hr>
 
@@ -3576,11 +3631,10 @@ class WalletHome extends React.Component {
                                                 onClick={() => {
                                                     copy(this.state.show_purchase_offer.offer_id);
                                                     alert("Copied offer ID to clipboard");
-                                                }}
-                                            />
+                                                }}/>
                                         </div>
 
-                                        <div className="d-flex flex-column mt-3">
+                                        <div style={{width: '50%'}} className="d-flex flex-column mt-3">
                                             <label>Description:</label>
                                             <span>{this.state.show_purchase_offer.description}</span>
                                         </div>
@@ -3588,50 +3642,50 @@ class WalletHome extends React.Component {
                                         <div className="d-flex flex-column mt-3">
                                             <label>Quantity:</label>
                                             <div className="d-flex align-items-center">
-                                            <Form.Control
-                                            style={{width: "60px"}}
-                                            className="light-blue-back"
-                                            id="quantity"
-                                            name="quantity"
-                                            type="number"
-                                            onChange={e => this.setState({quantity_input: e.target.value})}
-                                            max={this.state.show_purchase_offer.quantity} />
-                                            <span className="ml-2"> / {this.state.show_purchase_offer.quantity} available</span>
+                                                <Form.Control
+                                                    style={{width: "60px"}}
+                                                    className="light-blue-back"
+                                                    id="quantity"
+                                                    name="quantity"
+                                                    type="number"
+                                                    onChange={e => this.setState({quantity_input: e.target.value})}
+                                                    max={this.state.show_purchase_offer.quantity}/>
+                                                <span
+                                                    className="ml-2"> / {this.state.show_purchase_offer.quantity} available</span>
                                             </div>
                                         </div>
 
                                         <div className="d-flex mt-3">
-                                        <div className="d-flex align-items-center">
-                                            <label className="mb-0">Price:</label>
                                             <div className="d-flex align-items-center">
-                                            <span className="ml-2">{this.state.show_purchase_offer.price} SFX</span>
-                                            <img className="ml-2" width="20px" className="ml-2" src={sfxLogo} />
+                                                <label className="mb-0">Price:</label>
+                                                <div className="d-flex align-items-center">
+                                                    <span
+                                                        className="ml-2">{this.state.show_purchase_offer.price} SFX</span>
+                                                    <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div className="d-flex align-items-center ml-3">
-                                            <label className="mb-0">Total:</label>
-                                            <div className="d-flex align-items-center">
-                                            <span className="ml-2">{this.state.show_purchase_offer.price * (this.state.quantity_input || 0)} SFX</span>
-                                            <img className="ml-2" width="20px" className="ml-2" src={sfxLogo} />
+                                            <div className="d-flex align-items-center ml-3">
+                                                <label className="mb-0">Total:</label>
+                                                <div className="d-flex align-items-center">
+                                                    <span
+                                                        className="ml-2">{this.state.show_purchase_offer.price * (this.state.quantity_input || 0)} SFX</span>
+                                                    <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
+                                                </div>
                                             </div>
-                                        </div>
                                         </div>
 
                                         {this.state.showLoader ?
-                                        <Loader
-                                            className="justify-content-center align-content-center"
-                                            type="Bars"
-                                            color="#00BFFF"
-                                            height={50}
-                                            width={50}
-                                        />
-                                        :
-                                        <button className="mt-3">
-                                            Buy
-                                        </button>
-                                    }
-                                          </div>
+                                            <Loader
+                                                className="justify-content-center align-content-center"
+                                                type="Bars"
+                                                color="#00BFFF"
+                                                height={50}
+                                                width={50}/>
+                                            :
+                                            <button className="mt-3"> Buy </button>
+                                        }
+                                    </div>
                                 </Form>
                             </ReactModal>
 
@@ -3656,58 +3710,56 @@ class WalletHome extends React.Component {
                                         left: '30%',
                                         overflow: 'auto',
                                     }
-                                }}
-                            >
+                                }}>
                                 <div className="modal-title">
                                     Purchase confirmed
-                                        <CgClose
-                                            className="pointer"
-                                            style={{ position: "absolute", right: "15px", color: "red" }}
-                                            size={20}
-                                            onClick={this.handleConfirmationModal}
-                                        />
+                                    <CgClose
+                                        className="pointer"
+                                        style={{position: "absolute", right: "15px", color: "red"}}
+                                        size={20}
+                                        onClick={this.handleConfirmationModal}/>
                                 </div>
-{console.error(this.state.show_purchase_offer)}
+                                {console.error(this.state.show_purchase_offer)}
                                 <div id="receipt" className="p-4">
-                                <div className="d-flex justify-content-center">
-                                    <img width="200px" src={this.state.purchase_txn_image} />
-                                </div>
-                                <div className="d-flex mt-3 align-items-center">
-                                    <label className="mb-0">Title:</label>
-                                    <span className="ml-3">{this.state.show_purchase_offer.title}</span>
-                                </div>
+                                    <div className="d-flex justify-content-center">
+                                        <img width="200px" src={this.state.purchase_txn_image}/>
+                                    </div>
+                                    <div className="d-flex mt-3 align-items-center">
+                                        <label className="mb-0">Title:</label>
+                                        <span className="ml-3">{this.state.show_purchase_offer.title}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Transaction ID:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_id}</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Transaction ID:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_id}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Seller:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_seller}</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Seller:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_seller}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Purchased:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_title}</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Purchased:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_title}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Amount:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_quantity}</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Amount:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_quantity}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Price:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_price}</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Price:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_price}</span>
+                                    </div>
 
-                                <div className="d-flex align-items-center mt-2">
-                                    <label className="mb-0">Network fee:</label>
-                                    <span className="ml-3">{this.state.purchase_txn_fee / 10000000000} SFX</span>
-                                </div>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <label className="mb-0">Network fee:</label>
+                                        <span className="ml-3">{this.state.purchase_txn_fee / 10000000000} SFX</span>
+                                    </div>
 
-                                <button className="mt-3" onClick={() => print('receipt', 'html')}>Print</button>
+                                    <button className="mt-3" onClick={() => print('receipt', 'html')}>Print</button>
                                 </div>
                             </ReactModal>
 
@@ -3721,55 +3773,46 @@ class WalletHome extends React.Component {
                                     tokenBalance={this.state.tokens}
                                     pendingCash={this.state.pending_cash}
                                     pendingTokens={this.state.pending_tokens}
-                                    walletHeight={this.state.wallet_height}
-                                />
+                                    walletHeight={this.state.wallet_height}/>
                             </Col>
 
-                            <Col
-                                sm={7}
-                                className="no-padding d-flex flex-column justify-content-between"
-                            >
+                            <Col sm={7} className="no-padding d-flex flex-column justify-content-between">
                                 {this.renderAddressComponent()}
                             </Col>
 
-                                <div
-                                    className="d-flex align-items-center py-3"
-                                    style={{width: '1028px', margin: '0 auto', backgroundColor: 'white'}}
-                                >
-                                        <form
-                                            className="flex-row"
-                                            id="search-form" action=""
-                                            method=""
-                                        >
-                                                <input
-                                                style={{height: '30px', width: '300px', paddingLeft: '10px'}}
-                                                type="text"
-                                                       onChange={this.handle_change_api_fetch_url}
-                                                       value="https://api.theworldmarketplace.com"/>
+                            <div className="d-flex align-items-center py-3"
+                                 style={{width: '1028px', margin: '0 auto', backgroundColor: 'white'}}>
+                                <form className="flex-row" id="search-form" action="" method="">
+                                    <input
+                                        style={{height: '30px', width: '300px', paddingLeft: '10px'}}
+                                        type="text"
+                                        onChange={this.handle_change_api_fetch_url}
+                                        value="https://api.theworldmarketplace.com"/>
 
-                                                <button
-                                                style={{padding: '1rem', lineHeight: 0}}
-                                                onClick={this.load_offers_from_api} className="search-button ml-3">
-                                                    Show Products
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={this.handleBuyerOrders}
-                                                    style={{padding: '1rem', lineHeight: 0}}
-                                                    className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}
-                                                >
-                                                    {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
-                                                </button>
-                                                    <AiOutlineInfoCircle className="ml-2" size={20} data-tip data-for='apiInfo' />
-                                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
-                                                        <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
-                                                    </ReactTooltip>
-                                        </form>
-                                    </div>
+                                    <button
+                                        style={{padding: '1rem', lineHeight: 0}}
+                                        onClick={this.load_offers_from_api} className="search-button ml-3">
+                                        Show Products
+                                    </button>
+                                    <button type="button" onClick={this.handleBuyerOrders}
+                                            style={{padding: '1rem', lineHeight: 0}}
+                                            className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}>
+                                        {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
+                                    </button>
+                                    <AiOutlineInfoCircle className="ml-2" size={20} data-tip data-for='apiInfo'/>
+                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                        <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
+                                    </ReactTooltip>
+                                </form>
+                            </div>
 
                             {this.state.showBuyerOrders ?
                                 <div style={{width: '1028px', margin: '0 auto'}}>
-                                    <div style={{height: '25px', backgroundColor: 'white', borderBottom: '3px solid #d3d3d369'}} className="d-flex">
+                                    <div style={{
+                                        height: '25px',
+                                        backgroundColor: 'white',
+                                        borderBottom: '3px solid #d3d3d369'
+                                    }} className="d-flex">
                                         <label style={{width: '200px'}}>Title</label>
                                         <label style={{width: '100px'}}>Price (SFX)</label>
                                         <label style={{width: '100px'}}>Quantity</label>
@@ -3778,29 +3821,37 @@ class WalletHome extends React.Component {
                                         <label style={{width: '160px'}}>Actions</label>
                                     </div>
                                     {this.buyer_get_orders().map(order =>
-                                    <div key={order.order_id} className="products-table-row d-flex">
-                                        <div className="p-2" style={{width: '200px'}}>{order.title}</div>
-                                        <div className="d-flex align-items-center" style={{width: '100px'}}>{order.price} <img width="20px" className="ml-2" src={sfxLogo} /></div>
-                                        <div style={{width: '100px'}}>{order.quantity}</div>
-                                        <div style={{width: '120px'}}>
-                                        {this.to_ellipsis(order.order_id, 5, 5)}
+                                        <div key={order.order_id} className="products-table-row d-flex">
+                                            <div className="p-2" style={{width: '200px'}}>{order.title}</div>
+                                            <div className="d-flex align-items-center"
+                                                 style={{width: '100px'}}>{order.price} <img width="20px"
+                                                                                             className="ml-2"
+                                                                                             src={sfxLogo}/></div>
+                                            <div style={{width: '100px'}}>{order.quantity}</div>
+                                            <div style={{width: '120px'}}>
+                                                {this.to_ellipsis(order.order_id, 5, 5)}
                                                 <ReactTooltip type='info' effect='solid'>
-                                                <span>{order.order_id}</span>
-                                            </ReactTooltip>
-                                        </div>
-                                        <div className="d-flex align-items-center" style={{width: '120px'}}>
-                                        {this.to_ellipsis(order.offer_id, 5, 5)}
-                                        <CgCopy className="ml-1" onClick={() => {copy(order.offer_id); alert('Offer ID has been copied to clipboard')}} size={15} />
+                                                    <span>{order.order_id}</span>
+                                                </ReactTooltip>
+                                            </div>
+                                            <div className="d-flex align-items-center" style={{width: '120px'}}>
+                                                {this.to_ellipsis(order.offer_id, 5, 5)}
+                                                <CgCopy className="ml-1" onClick={() => {
+                                                    copy(order.offer_id);
+                                                    alert('Offer ID has been copied to clipboard')
+                                                }} size={15}/>
                                                 <ReactTooltip id={`${order.offer_id}`} type='info' effect='solid'>
-                                                <span>{order.offer_id}</span>
-                                            </ReactTooltip>
-                                        </div>
-                                        <div style={{width: '160px'}}>
-                                                <button style={{fontSize: '1.5rem'}} className="search-button" type="button"
-                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id)}>Show Messages
+                                                    <span>{order.offer_id}</span>
+                                                </ReactTooltip>
+                                            </div>
+                                            <div style={{width: '160px'}}>
+                                                <button style={{fontSize: '1.5rem'}} className="search-button"
+                                                        type="button"
+                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id)}>Show
+                                                    Messages
                                                 </button>
-                                    </div>
-                                    </div>)}
+                                            </div>
+                                        </div>)}
 
                                     <MessagesModal
                                         isOpen={this.state.showBuyerMessages}
@@ -3810,12 +3861,15 @@ class WalletHome extends React.Component {
                                         refreshFn={() => this.load_buyers_messages_for_selected_order(this.state.buyerSelectOffer, this.state.buyerSelectOrder)}
                                         messages={this.renderBuyerMessages()}
                                         orderId={this.state.buyerSelectOrder}
-                                        offerId={this.state.buyerSelectOffer} />
+                                        offerId={this.state.buyerSelectOffer}/>
                                 </div>
-
                                 :
                                 <div style={{width: "1028px", margin: '0 auto'}} className="">
-                                    <div style={{height: '25px', backgroundColor: 'white', borderBottom: '3px solid #d3d3d369'}} className="d-flex">
+                                    <div style={{
+                                        height: '25px',
+                                        backgroundColor: 'white',
+                                        borderBottom: '3px solid #d3d3d369'
+                                    }} className="d-flex">
                                         <label style={{width: '128px'}}>Image</label>
                                         <label style={{width: '200px'}}>Title</label>
                                         <label style={{width: '100px'}}>Type</label>
@@ -3826,7 +3880,9 @@ class WalletHome extends React.Component {
                                         <label style={{width: '100px'}}>Actions</label>
                                     </div>
                                     <div style={{width: '100%', maxHeight: '550px', overflowY: 'scroll'}}>
-                                    {table_of_listings || <div className="products-table-row p-4 text-align-center">Click "Show Products" to load products.</div>}
+                                        {table_of_listings ||
+                                        <div className="products-table-row p-4 text-align-center">Click "Show Products"
+                                            to load products.</div>}
                                     </div>
 
                                 </div>
@@ -4019,54 +4075,35 @@ class WalletHome extends React.Component {
                                                     <Form.Group as={Col}>
                                                         <Form.Label>Username</Form.Label>
 
-                                                        <Form.Control
-                                                            disabled
-                                                            name="username"
-                                                            value={selected.username}
-                                                        />
+                                                        <Form.Control disabled name="username"
+                                                                      value={selected.username}/>
                                                     </Form.Group>
 
                                                     <Form.Group as={Col}>
                                                         <Form.Label>Image URL</Form.Label>
 
-                                                        <Form.Control
-                                                            name="main_image"
-                                                            onChange={this.handleChange}
-                                                        />
+                                                        <Form.Control name="main_image" onChange={this.handleChange}/>
                                                     </Form.Group>
                                                     <Form.Group as={Col}>
                                                         <Form.Label>Image 2</Form.Label>
 
-                                                        <Form.Control
-                                                            name="image_2"
-                                                            onChange={this.handleChange}
-                                                        />
+                                                        <Form.Control name="image_2" onChange={this.handleChange}/>
                                                     </Form.Group>
                                                     <Form.Group as={Col}>
                                                         <Form.Label>Image 3</Form.Label>
 
-                                                        <Form.Control
-                                                            name="image_3"
-                                                            onChange={this.handleChange}
-                                                        />
+                                                        <Form.Control name="image_3" onChange={this.handleChange}/>
                                                     </Form.Group>
                                                     <Form.Group as={Col}>
                                                         <Form.Label>Image 4</Form.Label>
 
-                                                        <Form.Control
-                                                            name="image_4"
-                                                            onChange={this.handleChange}
-                                                        />
+                                                        <Form.Control name="image_4" onChange={this.handleChange}/>
                                                     </Form.Group>
                                                 </Col>
                                                 <Col md="4">
-                                                    <Image
-                                                        className="border border-white grey-back"
-                                                        width={150}
-                                                        height={150}
-                                                        src={this.state.main_offer_image}
-                                                        roundedCircle
-                                                    />
+                                                    <Image className="border border-white grey-back" width={150}
+                                                           height={150} src={this.state.main_offer_image}
+                                                           roundedCircle/>
                                                 </Col>
                                             </Row>
                                             <Row md="8">
@@ -4080,8 +4117,7 @@ class WalletHome extends React.Component {
                                                 <Form.Group md="6" as={Col}>
                                                     <Form.Label>Description</Form.Label>
 
-                                                    <Form.Control maxLength="2000" as="textarea"
-                                                                  name="description"
+                                                    <Form.Control maxLength="2000" as="textarea" name="description"
                                                                   defaultValue={data.description}/>
                                                 </Form.Group>
 
@@ -4106,10 +4142,7 @@ class WalletHome extends React.Component {
                                                 <Form.Group md="6" as={Col}>
                                                     <Form.Label>SKU</Form.Label>
 
-                                                    <Form.Control
-                                                        name="sku"
-                                                        defaultValue={data.sku}
-                                                    />
+                                                    <Form.Control name="sku" defaultValue={data.sku}/>
                                                 </Form.Group>
 
                                                 <Form.Group md="6" as={Col}>
@@ -4117,27 +4150,20 @@ class WalletHome extends React.Component {
 
                                                     <Form.Control
                                                         name="barcode"
-                                                        defaultValue={data.barcode}
-                                                    />
+                                                        defaultValue={data.barcode}/>
                                                 </Form.Group>
 
                                                 <Form.Group md="6" as={Col}>
                                                     <Form.Label>Weight</Form.Label>
 
-                                                    <Form.Control
-                                                        name="weight"
-                                                        defaultValue={data.weight}
-                                                    />
+                                                    <Form.Control name="weight" defaultValue={data.weight}/>
                                                 </Form.Group>
 
                                                 <Form.Group md="6" as={Col}>
                                                     <Form.Label>Country of Origin</Form.Label>
 
-                                                    <Form.Control
-                                                        name="country"
-                                                        defaultValue={data.country}
-                                                        placedholder="your location"
-                                                    />
+                                                    <Form.Control name="country" defaultValue={data.country}
+                                                                  placedholder="your location"/>
                                                 </Form.Group>
                                             </Row>
 
@@ -4148,8 +4174,7 @@ class WalletHome extends React.Component {
                                                     onChange={this.change_shipping_switch}
                                                     type="switch"
                                                     id="shipping-switch"
-                                                    name="shipping"
-                                                />
+                                                    name="shipping"/>
 
                                                 <Form.Check
                                                     label="NFT"
@@ -4157,8 +4182,7 @@ class WalletHome extends React.Component {
                                                     onChange={this.change_nft_switch}
                                                     type="switch"
                                                     id="nft-switch"
-                                                    name="nft"
-                                                />
+                                                    name="nft"/>
 
                                                 <Form.Check
                                                     label="Open Messages"
@@ -4166,8 +4190,7 @@ class WalletHome extends React.Component {
                                                     onChange={this.change_open_message_switch}
                                                     type="switch"
                                                     id="open-switch"
-                                                    name="open_message"
-                                                />
+                                                    name="open_message"/>
                                             </Row>
 
                                             <Form.Group as={Col}>
@@ -4187,11 +4210,7 @@ class WalletHome extends React.Component {
                                                     </IconContext.Provider>
                                                 </Form.Label>
 
-                                                <Form.Control
-                                                    name="mixins"
-                                                    as="select"
-                                                    defaultValue="7"
-                                                >
+                                                <Form.Control name="mixins" as="select" defaultValue="7">
                                                     <option>1</option>
                                                     <option>2</option>
                                                     <option>3</option>
@@ -4657,35 +4676,35 @@ class WalletHome extends React.Component {
                                     id="send_token"
                                 />
                             </Col>
-                                <div style={{width: '900px'}} className="p-4">
-                                    <StakingTable
-                                        stakeRows={this.state.token_stakes}
-                                    />
-                                    <div className="d-flex justify-content-between w-100 mt-4">
+                            <div style={{width: '900px'}} className="p-4">
+                                <StakingTable
+                                    stakeRows={this.state.token_stakes}
+                                />
+                                <div className="d-flex justify-content-between w-100 mt-4">
                                     <StakeInfo
-                                            tokenBalance={this.state.tokens.toLocaleString()}
-                                            pendingStakeBalance={this.state.pending_stake.toLocaleString()}
-                                            stakedBalance={this.state.unlocked_stake.toLocaleString()}
-                                            interest={this.state.blockchain_current_interest.cash_per_token / 10000000000}
-                                            blockHeight={this.state.blockchain_height.toLocaleString()}
-                                            nextInterval={1000 - (this.state.blockchain_height % 1000)}
-                                            totalNetworkStake={this.state.blockchain_tokens_staked.toLocaleString()}
-                                        />
-                                        <Stake
-                                            style="stake"
-                                            send={this.make_token_stake}
-                                            id="stake_token"
-                                            tokenBalance={this.state.tokens.toLocaleString()}
-                                            tokenStakes={this.state.token_stakes}
-                                        />
-                                        <Stake
-                                            style="unstake"
-                                            send={this.make_token_unstake}
-                                            id="stake_token"
-                                            tokenStakes={this.state.token_stakes}
-                                        />
-                                    </div>
+                                        tokenBalance={this.state.tokens.toLocaleString()}
+                                        pendingStakeBalance={this.state.pending_stake.toLocaleString()}
+                                        stakedBalance={this.state.unlocked_stake.toLocaleString()}
+                                        interest={this.state.blockchain_current_interest.cash_per_token / 10000000000}
+                                        blockHeight={this.state.blockchain_height.toLocaleString()}
+                                        nextInterval={1000 - (this.state.blockchain_height % 1000)}
+                                        totalNetworkStake={this.state.blockchain_tokens_staked.toLocaleString()}
+                                    />
+                                    <Stake
+                                        style="stake"
+                                        send={this.make_token_stake}
+                                        id="stake_token"
+                                        tokenBalance={this.state.tokens.toLocaleString()}
+                                        tokenStakes={this.state.token_stakes}
+                                    />
+                                    <Stake
+                                        style="unstake"
+                                        send={this.make_token_unstake}
+                                        id="stake_token"
+                                        tokenStakes={this.state.token_stakes}
+                                    />
                                 </div>
+                            </div>
                         </div>
                     );
                 }

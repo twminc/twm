@@ -124,9 +124,7 @@ export default class RecoverKeys extends React.Component {
 
                             twm_obj.version = 1;
                             twm_obj.api = {};
-                            twm_obj.api.urls = {}; /*
-                    twm_obj.api.urls.theworldmarketplace = {};
-                    twm_obj.api.urls.theworldmarketplace.url = 'api.theworldmarketplace.com';*/
+                            twm_obj.api.urls = {};
                             twm_obj.accounts = {};
                             twm_obj.settings = {};
 
@@ -138,13 +136,8 @@ export default class RecoverKeys extends React.Component {
                                 twm_obj.accounts[acc.username].username = acc.username;
                                 twm_obj.accounts[acc.username].data = acc.data;
                                 twm_obj.accounts[acc.username].safex_public_key = acc.publicKey;
-                                twm_obj.accounts[acc.username].safex_private_key =
-                                    acc.privateKey;
+                                twm_obj.accounts[acc.username].safex_private_key = acc.privateKey;
                                 twm_obj.accounts[acc.username].urls = {};
-                                /*
-                                                                        twm_obj.accounts[acc.username].urls.theworldmarketplace = {};
-                                                                        twm_obj.accounts[acc.username].urls.theworldmarketplace.url = 'api.theworldmarketplace.com';
-                                                */
                             }
 
                             const algorithm = "aes-256-ctr";
