@@ -220,3 +220,8 @@
   .pointer {
       cursor: pointer;
   }
+
+  .product-image {
+      max-height: 720px;
+      max-width: 480px;
+  }

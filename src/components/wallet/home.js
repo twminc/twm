@@ -76,6 +76,7 @@ import zlib from 'zlib';
 import {AiOutlineInfoCircle} from 'react-icons/ai';
 import MessagesModal from '../customComponents/MessagesModal';
 import {INSTRUMENTS} from '../../consts';
+import crypto from "crypto";
 
 const sfxjs = window.require('safex-addressjs');
 
@@ -160,7 +161,8 @@ class WalletHome extends React.Component {
             buyer_urls: [],
             user_registered: null,
             show_modal_for_image: null,
-            token_stakes: []
+            token_stakes: [],
+            title_chars: 0
         };
     }
 
@@ -270,6 +272,7 @@ class WalletHome extends React.Component {
         });
         this.setState({txnhistory: txnhistory});
     }
+
 
     refresh_action = async () => {
         console.log("refreshing rn");
@@ -1674,6 +1677,11 @@ class WalletHome extends React.Component {
         }
     };
 
+    title_chars_change = (e) => {
+        e.preventDefault();
+        this.setState({title_chars: e.target.value.length});
+    }
+
     to_ellipsis = (text, firstHalf, secondHalf) => {
         if (typeof text !== "string") {
             return text
@@ -2398,6 +2406,9 @@ class WalletHome extends React.Component {
                 console.log(req_msgs.to[order]);
                 for (const msg of req_msgs.to[order]) {
                     try {
+
+                        console.log(msg.position);
+
                         const decryptedData = crypto.privateDecrypt(
                             {
                                 key: our_key,
@@ -2530,6 +2541,8 @@ class WalletHome extends React.Component {
 
                             let found_key = crypto.createPublicKey(seller_pubkey.user.pgp_key);
 
+                            console.log(found_key);
+
                             let encrypted_message = crypto.publicEncrypt(
                                 {
                                     key: found_key,
@@ -2538,6 +2551,8 @@ class WalletHome extends React.Component {
                                 },
                                 compressed_message_obj
                             );
+
+                            console.log(encrypted_message);
 
                             let hex_enc_msg = this.byteToHexString(encrypted_message);
 
@@ -2683,8 +2698,19 @@ class WalletHome extends React.Component {
                             let open_message = '';
                             let nft_address = '';
                             let shipping = {};
+                            shipping.fn = '';
+                            shipping.ln = '';
+                            shipping.a1 = '';
+                            shipping.a2 = '';
+                            shipping.a3 = '';
+                            shipping.city = '';
+                            shipping.s = '';
+                            shipping.z = '';
+                            shipping.c = '';
+                            shipping.ea = '';
+                            shipping.ph = '';
 
-                            confirm_message = `Are you sure you want to purchase ${quant} X ${listing.title} for a total of ${total_cost} SFX?`;
+                            confirm_message = `Are you sure you want to purchase ${quant} of ${listing.title} for a total of ${total_cost} SFX?`;
 
                             confirmed = window.confirm(confirm_message);
 
@@ -3247,7 +3273,6 @@ class WalletHome extends React.Component {
         />)
     }
 
-
     render() {
         var message_render;
 
@@ -3277,6 +3302,7 @@ class WalletHome extends React.Component {
                                     pendingCash={this.state.pending_cash}
                                     pendingTokens={this.state.pending_tokens}
                                     walletHeight={this.state.wallet_height}
+                                    stakedTokens={this.state.unlocked_stake}
                                 />
 
                                 <SendSafex
@@ -3289,40 +3315,41 @@ class WalletHome extends React.Component {
 
                             <Col sm={8} className="no-padding d-flex flex-column  justify-content-between">
                                 {this.renderAddressComponent()}
-                                    <div className="d-flex align-items-center py-3"
-                                         style={{width: '90%', backgroundColor: 'white'}}>
-                                        <form className="flex-row" id="search-form" action="" method="">
-                                            <input
-                                                style={{height: '30px', width: '300px', paddingLeft: '10px'}}
-                                                type="text"
-                                                onChange={this.handle_change_api_fetch_url}
-                                                value="https://api.theworldmarketplace.com"/>
+                                <div className="d-flex align-items-center py-3"
+                                     style={{width: '90%', backgroundColor: 'white'}}>
+                                    <form className="flex-row" id="search-form" action="" method="">
+                                        <input
+                                            style={{height: '30px', width: '300px', paddingLeft: '10px'}}
+                                            type="text"
+                                            onChange={this.handle_change_api_fetch_url}
+                                            value="https://api.theworldmarketplace.com"/>
 
-                                            <button
+                                        <button
+                                            style={{padding: '1rem', lineHeight: 0}}
+                                            onClick={this.load_offers_from_api} className="search-button ml-3">
+                                            Show Products
+                                        </button>
+                                        <button type="button" onClick={this.handleBuyerOrders}
                                                 style={{padding: '1rem', lineHeight: 0}}
-                                                onClick={this.load_offers_from_api} className="search-button ml-3">
-                                                Show Products
-                                            </button>
-                                            <button type="button" onClick={this.handleBuyerOrders}
-                                                    style={{padding: '1rem', lineHeight: 0}}
-                                                    className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}>
-                                                {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
-                                            </button>
-                                            <AiOutlineInfoCircle className="ml-2" size={20} data-tip
-                                                                 data-for='apiInfo'/>
-                                            <ReactTooltip id='apiInfo' type='info' effect='solid'>
-                                                <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
-                                            </ReactTooltip>
-                                        </form>
-                                    </div>
+                                                className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}>
+                                            {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
+                                        </button>
+                                        <AiOutlineInfoCircle className="ml-2" size={20} data-tip
+                                                             data-for='apiInfo'/>
+                                        <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                            <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
+                                        </ReactTooltip>
+                                    </form>
+                                </div>
                             </Col>
                         </div>
                     );
                 }
                 case "market":
-                    var table_of_listings;
+                    //var table_of_listings = [];
                     if (this.state.offer_loading_flag === 'twmurl') {
-                        table_of_listings = this.state.twm_url_offers.map((listing, key) => {
+                        let rowContents = [];
+                        var table_of_listings = this.state.twm_url_offers.reduce((acc, listing, key) => {
                             listing.offerID = listing.offer_id;
 
                             try {
@@ -3347,65 +3374,60 @@ class WalletHome extends React.Component {
                                 } else if (listing.open_message == true) {
                                     offer_type = 'open';
                                 }
-                                try {
-                                    return (
-                                        <div className="products-table-row d-flex" key={key}>
-                                            <div className="d-flex align-items-center justify-content-center" style={{
-                                                width: '128px',
-                                                height: '128px',
-                                                backgroundColor: '#d3d3d34a'
-                                            }}>
-                                                {listing.main_image ?
-                                                    <img width="128px" height="128px" src={listing.main_image}/> :
-                                                    <span style={{color: '#afafaf'}}>no product image</span>}
-                                            </div>
-                                            <div className="p-2" style={{width: '200px'}} data-tip
-                                                 data-for={`offerTitle${key}`}>
-                                                {listing.title}
-                                            </div>
-                                            <div style={{width: '100px'}}>{offer_type}</div>
+                                rowContents.push(
+                                    <Col md={3} key={key}>
+                                        {listing.main_image ?
+                                            <img width="128px" height="128px" src={listing.main_image}/> :
+                                            <span style={{color: '#afafaf'}}>no product image</span>}
 
-                                            <div className="d-flex align-items-center" style={{width: '150px'}}>
-                                                {listing.price} <img width="20px" className="ml-2" src={sfxLogo}/></div>
-
-                                            <div style={{width: '150px'}}>{listing.quantity}</div>
-
-                                            <div style={{width: '100px'}}>{listing.username}</div>
-
-                                            <div className="d-flex align-items-center" style={{width: '100px'}} data-tip
-                                                 data-for={`offerID${key}`}>
-                                                {this.to_ellipsis(listing.offer_id, 5, 5)}
-                                                <CgCopy className="ml-1" onClick={() => {
-                                                    copy(listing.offer_id);
-                                                    alert('Offer ID has been copied to clipboard')
-                                                }} size={15}/>
-                                                <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
-                                                    <span>{listing.offer_id}</span>
-                                                </ReactTooltip>
-                                            </div>
-
-                                            <div style={{width: '100px'}}>
-                                                {listing.quantity <= 0 ?
-                                                    (<button className="search-button" disabled>
-                                                        SOLD OUT
-                                                    </button>)
-                                                    :
-                                                    (<button style={{fontSize: '1.5rem'}} className="search-button"
-                                                             onClick={() => this.handleShowPurchaseForm(listing, data)}>
-                                                        BUY
-                                                    </button>)
-                                                }
-                                            </div>
+                                        <div className="p-2" style={{width: '200px'}} data-tip
+                                             data-for={`offerTitle${key}`}>
+                                            {listing.title}
                                         </div>
-                                    )
-                                } catch (err) {
-                                    console.error(`failed to properly parse the user data formatting`);
-                                    console.error(err);
-                                }
-                            } catch (err) {
+
+                                        <div className="d-flex align-items-center" style={{width: '150px'}}>
+                                            {listing.price} <img width="20px" className="ml-2" src={sfxLogo}/></div>
+
+                                        <div style={{width: '150px'}}>quantity: {listing.quantity}</div>
+
+                                        <div style={{width: '100px'}}>seller: {listing.username}</div>
+
+                                        <div className="d-flex align-items-center" style={{width: '100px'}} data-tip
+                                             data-for={`offerID${key}`}>
+                                            {this.to_ellipsis(listing.offer_id, 5, 5)}
+                                            <CgCopy className="ml-1" onClick={() => {
+                                                copy(listing.offer_id);
+                                                alert('Offer ID has been copied to clipboard')
+                                            }} size={15}/>
+                                            <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
+                                                <span>{listing.offer_id}</span>
+                                            </ReactTooltip>
+                                        </div>
+
+                                        <div style={{width: '100px'}}>
+                                            {listing.quantity <= 0 ?
+                                                (<button className="search-button" disabled>
+                                                    SOLD OUT
+                                                </button>)
+                                                :
+                                                (<button style={{fontSize: '1.5rem'}} className="search-button"
+                                                         onClick={() => this.handleShowPurchaseForm(listing, data)}>
+                                                    BUY
+                                                </button>)
+                                            }
+                                        </div>
+                                    </Col>
+                                )
+                            } catch(err) {
+                                console.error(`error`);
                                 console.error(err);
                             }
-                        });
+                            if (key % 4 === 3) {
+                                acc.push(<Row>{rowContents}</Row>);
+                                rowContents = [];
+                            }
+                            return acc;
+                        },[]);
                     }
 
                     return (
@@ -3604,7 +3626,7 @@ class WalletHome extends React.Component {
                                                     size={20}
                                                     onClick={() => this.setState({show_modal_for_image: null})}/>
                                                 <div className="mt-4">
-                                                    <img style={{maxHeight: '90vh', maxWidth: '95%'}}
+                                                    <img style={{maxHeight: '800px', maxWidth: '600px'}}
                                                          src={this.state.show_modal_for_image}/>
                                                 </div>
                                             </ReactModal>
@@ -3773,7 +3795,9 @@ class WalletHome extends React.Component {
                                     tokenBalance={this.state.tokens}
                                     pendingCash={this.state.pending_cash}
                                     pendingTokens={this.state.pending_tokens}
-                                    walletHeight={this.state.wallet_height}/>
+                                    walletHeight={this.state.wallet_height}
+                                    stakedTokens={this.state.unlocked_stake}
+                                />
                             </Col>
 
                             <Col sm={7} className="no-padding d-flex flex-column justify-content-between">
@@ -3781,7 +3805,7 @@ class WalletHome extends React.Component {
                             </Col>
 
                             <div className="d-flex align-items-center py-3"
-                                 style={{width: '1028px', margin: '0 auto', backgroundColor: 'white'}}>
+                                 style={{width: '80%', margin: '0 auto', backgroundColor: 'white'}}>
                                 <form className="flex-row" id="search-form" action="" method="">
                                     <input
                                         style={{height: '30px', width: '300px', paddingLeft: '10px'}}
@@ -3864,28 +3888,13 @@ class WalletHome extends React.Component {
                                         offerId={this.state.buyerSelectOffer}/>
                                 </div>
                                 :
-                                <div style={{width: "1028px", margin: '0 auto'}} className="">
-                                    <div style={{
-                                        height: '25px',
-                                        backgroundColor: 'white',
-                                        borderBottom: '3px solid #d3d3d369'
-                                    }} className="d-flex">
-                                        <label style={{width: '128px'}}>Image</label>
-                                        <label style={{width: '200px'}}>Title</label>
-                                        <label style={{width: '100px'}}>Type</label>
-                                        <label style={{width: '150px'}}>Price (SFX)</label>
-                                        <label style={{width: '150px'}}>Quantity</label>
-                                        <label style={{width: '100px'}}>Seller</label>
-                                        <label style={{width: '100px'}}>Offer ID</label>
-                                        <label style={{width: '100px'}}>Actions</label>
-                                    </div>
-                                    <div style={{width: '100%', maxHeight: '550px', overflowY: 'scroll'}}>
+                                    <div style={{marginLeft: '10%', width: '80%', maxHeight: '550px', overflowY: 'scroll', background: 'white'}}>
                                         {table_of_listings ||
                                         <div className="products-table-row p-4 text-align-center">Click "Show Products"
                                             to load products.</div>}
                                     </div>
 
-                                </div>
+
                             }
                         </div>
                     );
@@ -3976,6 +3985,7 @@ class WalletHome extends React.Component {
                                         pendingCash={this.state.pending_cash}
                                         pendingTokens={this.state.pending_tokens}
                                         walletHeight={this.state.wallet_height}
+                                        stakedTokens={this.state.unlocked_stake}
                                     />
 
                                     <MerchantTabs
@@ -4072,29 +4082,22 @@ class WalletHome extends React.Component {
                                         <Form id="list_new_offer" onSubmit={this.list_new_offer}>
                                             <Row className="no-gutters justify-content-between w-100">
                                                 <Col md="8">
-                                                    <Form.Group as={Col}>
-                                                        <Form.Label>Username</Form.Label>
-
-                                                        <Form.Control disabled name="username"
-                                                                      value={selected.username}/>
-                                                    </Form.Group>
-
-                                                    <Form.Group as={Col}>
-                                                        <Form.Label>Image URL</Form.Label>
+                                                    <Form.Group md="6" as={Col}>
+                                                        <Form.Label>Main Image URL</Form.Label>
 
                                                         <Form.Control name="main_image" onChange={this.handleChange}/>
                                                     </Form.Group>
-                                                    <Form.Group as={Col}>
+                                                    <Form.Group md="6" as={Col}>
                                                         <Form.Label>Image 2</Form.Label>
 
                                                         <Form.Control name="image_2" onChange={this.handleChange}/>
                                                     </Form.Group>
-                                                    <Form.Group as={Col}>
+                                                    <Form.Group md="6" as={Col}>
                                                         <Form.Label>Image 3</Form.Label>
 
                                                         <Form.Control name="image_3" onChange={this.handleChange}/>
                                                     </Form.Group>
-                                                    <Form.Group as={Col}>
+                                                    <Form.Group md="6" as={Col}>
                                                         <Form.Label>Image 4</Form.Label>
 
                                                         <Form.Control name="image_4" onChange={this.handleChange}/>
@@ -4106,22 +4109,23 @@ class WalletHome extends React.Component {
                                                            roundedCircle/>
                                                 </Col>
                                             </Row>
-                                            <Row md="8">
-                                                <Form.Group md="6" as={Col}>
-                                                    <Form.Label>Title</Form.Label>
+                                            <Row>
+                                                <Form.Group md="12" as={Col}>
+                                                    <Form.Label>Title (max 80 characters) {this.state.title_chars} /
+                                                        80</Form.Label>
 
-                                                    <Form.Control name="title"
+                                                    <Form.Control name="title" onChange={this.title_chars_change}
                                                                   defaultValue={this.state.show_edit_offer.title}/>
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="12" as={Col}>
                                                     <Form.Label>Description</Form.Label>
 
                                                     <Form.Control maxLength="2000" as="textarea" name="description"
                                                                   defaultValue={data.description}/>
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="3" as={Col}>
                                                     <Form.Label>Price (SFX)</Form.Label>
 
                                                     <Form.Control
@@ -4130,7 +4134,7 @@ class WalletHome extends React.Component {
                                                     />
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="3" as={Col}>
                                                     <Form.Label>Available Quantity</Form.Label>
 
                                                     <Form.Control
@@ -4139,13 +4143,13 @@ class WalletHome extends React.Component {
                                                     />
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="3" as={Col}>
                                                     <Form.Label>SKU</Form.Label>
 
                                                     <Form.Control name="sku" defaultValue={data.sku}/>
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="3" as={Col}>
                                                     <Form.Label>Barcode (ISBN, UPC, GTIN, etc)</Form.Label>
 
                                                     <Form.Control
@@ -4153,13 +4157,23 @@ class WalletHome extends React.Component {
                                                         defaultValue={data.barcode}/>
                                                 </Form.Group>
 
-                                                <Form.Group md="6" as={Col}>
+                                                <Form.Group md="4" as={Col}>
                                                     <Form.Label>Weight</Form.Label>
 
                                                     <Form.Control name="weight" defaultValue={data.weight}/>
                                                 </Form.Group>
+                                                <Form.Group md="4" as={Col}>
+                                                    <Form.Label>Units</Form.Label>
 
-                                                <Form.Group md="6" as={Col}>
+                                                    <Form.Control name="units" as="select" defaultValue="oz">
+                                                        <option value="g">Grams</option>
+                                                        <option value="kg">Kilograms</option>
+                                                        <option value="oz">Ounces</option>
+                                                        <option value="lb">Pounds</option>
+                                                    </Form.Control>
+                                                </Form.Group>
+
+                                                <Form.Group md="4" as={Col}>
                                                     <Form.Label>Country of Origin</Form.Label>
 
                                                     <Form.Control name="country" defaultValue={data.country}
@@ -4167,63 +4181,87 @@ class WalletHome extends React.Component {
                                                 </Form.Group>
                                             </Row>
 
-                                            <Row className="w-100 justify-content-around my-3">
-                                                <Form.Check
-                                                    label="Shipping"
-                                                    checked={this.state.shipping_switch}
-                                                    onChange={this.change_shipping_switch}
-                                                    type="switch"
-                                                    id="shipping-switch"
-                                                    name="shipping"/>
+                                            <Row>
 
-                                                <Form.Check
-                                                    label="NFT"
-                                                    checked={this.state.nft_switch}
-                                                    onChange={this.change_nft_switch}
-                                                    type="switch"
-                                                    id="nft-switch"
-                                                    name="nft"/>
+                                                <Form.Group md="3" as={Col}>
+                                                    <Form.Check
+                                                        label="Shipping"
+                                                        checked={this.state.shipping_switch}
+                                                        onChange={this.change_shipping_switch}
+                                                        type="switch"
+                                                        id="shipping-switch"
+                                                        name="shipping"/>
+                                                    <Form.Check
+                                                        label="NFT"
+                                                        checked={this.state.nft_switch}
+                                                        onChange={this.change_nft_switch}
+                                                        type="switch"
+                                                        id="nft-switch"
+                                                        name="nft"/>
+                                                    <Form.Check
+                                                        label="Open Messages"
+                                                        checked={this.state.open_message_switch}
+                                                        onChange={this.change_open_message_switch}
+                                                        type="switch"
+                                                        id="open-switch"
+                                                        name="open_message"/>
+                                                </Form.Group>
+                                                <Col md="3">
 
-                                                <Form.Check
-                                                    label="Open Messages"
-                                                    checked={this.state.open_message_switch}
-                                                    onChange={this.change_open_message_switch}
-                                                    type="switch"
-                                                    id="open-switch"
-                                                    name="open_message"/>
+                                                </Col>
+                                                <Col md="3">
+
+                                                </Col>
+                                                <Col md="3">
+
+                                                </Col>
+
+
                                             </Row>
+                                            <Row>
+                                                <Col md="4">
+                                                    <Form.Group as={Col}>
+                                                        <Form.Label>Username</Form.Label>
 
-                                            <Form.Group as={Col}>
-                                                <Form.Label>
-                                                    Mixins
-                                                    <IconContext.Provider value={{color: 'black', size: '20px'}}>
-                                                        <FaInfoCircle data-tip data-for='apiInfo'
-                                                                      className="blockchain-icon mx-4 white-text"/>
+                                                        <Form.Control disabled name="username"
+                                                                      value={selected.username}/>
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <button type="submit">
+                                                        List Offer
+                                                    </button>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Form.Group md="4" as={Col}>
+                                                        <Form.Label>
+                                                            Mixins
+                                                            <IconContext.Provider value={{color: 'black', size: '5px'}}>
+                                                                <FaInfoCircle data-tip data-for='apiInfo'
+                                                                              className="mx-4 white-text"/>
 
-                                                        <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                                <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
                                                                     Mixins are transactions that have also been sent on the Safex blockchain. <br/>
                                                                     They are combined with yours for private transactions.<br/>
                                                                     Changing this from the default could hurt your privacy.<br/>
                                                                 </span>
-                                                        </ReactTooltip>
-                                                    </IconContext.Provider>
-                                                </Form.Label>
+                                                                </ReactTooltip>
+                                                            </IconContext.Provider>
+                                                        </Form.Label>
 
-                                                <Form.Control name="mixins" as="select" defaultValue="7">
-                                                    <option>1</option>
-                                                    <option>2</option>
-                                                    <option>3</option>
-                                                    <option>4</option>
-                                                    <option>5</option>
-                                                    <option>6</option>
-                                                    <option>7</option>
-                                                </Form.Control>
-                                            </Form.Group>
-
-                                            <button className="my-5" type="submit">
-                                                List Offer
-                                            </button>
+                                                        <Form.Control name="mixins" as="select" defaultValue="7">
+                                                            <option>1</option>
+                                                            <option>2</option>
+                                                            <option>3</option>
+                                                            <option>4</option>
+                                                            <option>5</option>
+                                                            <option>6</option>
+                                                            <option>7</option>
+                                                        </Form.Control>
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
                                         </Form>
 
                                         <Button className="close-button" onClick={this.handleCloseNewOfferForm}>
@@ -4667,6 +4705,7 @@ class WalletHome extends React.Component {
                                     pendingCash={this.state.pending_cash}
                                     pendingTokens={this.state.pending_tokens}
                                     walletHeight={this.state.wallet_height}
+                                    stakedTokens={this.state.unlocked_stake}
                                 />
                                 <SendSafex
                                     title="SEND SAFEX TOKENS (SFT)"

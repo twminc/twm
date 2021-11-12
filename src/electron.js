@@ -61,7 +61,7 @@ function createWindow() {
                 label: "TWM Wallet",
                 submenu: [
                     {
-                        label: "TWM v2.0.0",
+                        label: "TWM v1.5.0",
                         selector: "orderFrontStandardAboutPanel:"
                     },
                     { type: "separator" },
@@ -107,7 +107,7 @@ function createWindow() {
 require("electron-context-menu")({
     prepend: (params, browserWindow) => [
         {
-            label: "TWM 2.0.0"
+            label: "TWM 1.5.0"
         }
     ],
     shouldShowMenu: (event, params) => params.mediaType !== "image",
