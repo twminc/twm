@@ -21,6 +21,7 @@ export default class History extends React.Component {
 
     render() {
         let txn_history_table_data = this.props.txnhistory.map((txn, key) => {
+            console.log(txn);
             let the_type = '';
             switch (txn.transactionType) {
                 case 0: {
@@ -88,6 +89,7 @@ export default class History extends React.Component {
             if (the_type == 'your purchase') {
                 return (
                     <tr className="tx-row" key={key}>
+                        <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
                         <td>{txn.id}</td>
                         <td>{txn.direction}</td>
                         <td>{txn.pending}</td>
@@ -101,6 +103,7 @@ export default class History extends React.Component {
             } else {
                 return (
                     <tr className="tx-row" key={key}>
+                        <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
                         <td>{txn.id}</td>
                         <td>{txn.direction}</td>
                         <td>{txn.pending}</td>
@@ -120,6 +123,7 @@ export default class History extends React.Component {
                         <Table>
                             <thead style={{border: '1px solid lightgray'}}>
                                 <tr>
+                                    <th>Date/Time</th>
                                     <th>TXID</th>
                                     <th>In/Out</th>
                                     <th>Pending?</th>
