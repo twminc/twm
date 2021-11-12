@@ -3375,50 +3375,63 @@ class WalletHome extends React.Component {
                                     offer_type = 'open';
                                 }
                                 rowContents.push(
-                                    <Col md={3} key={key}>
-                                        {listing.main_image ?
-                                            <img width="128px" height="128px" src={listing.main_image}/> :
-                                            <span style={{color: '#afafaf'}}>no product image</span>}
+                                    <Col md={3} key={key} style={{padding: '10px'}}>
+                                        <div className="text-center">
+                                            {listing.main_image ?
+                                                <img width="128px" height="128px" src={listing.main_image}/> :
+                                                <span style={{color: '#afafaf'}}>no product image</span>}
 
-                                        <div className="p-2" style={{width: '200px'}} data-tip
-                                             data-for={`offerTitle${key}`}>
-                                            {listing.title}
+                                            <div data-tip
+                                                 data-for={`offerTitle${key}`}>
+                                                {listing.title}
+                                            </div>
                                         </div>
 
-                                        <div className="d-flex align-items-center" style={{width: '150px'}}>
-                                            {listing.price} <img width="20px" className="ml-2" src={sfxLogo}/></div>
+                                        <Col md={4}>
+                                            <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
+                                                <li>Price:</li>
+                                                <li>Quantity:</li>
+                                                <li>Seller:</li>
+                                                <li>Offer Id:</li>
+                                            </ul>
+                                        </Col>
+                                        <Col md={8}>
+                                            <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
+                                                <li>{listing.price} <img width="20px" className="ml-2" src={sfxLogo}/>
+                                                </li>
+                                                <li>{listing.quantity}</li>
+                                                <li>{listing.username}</li>
+                                                <li>
+                                                    <div data-tip
+                                                         data-for={`offerID${key}`}>
+                                                        {this.to_ellipsis(listing.offer_id, 5, 5)}
+                                                        <CgCopy className="ml-1" onClick={() => {
+                                                            copy(listing.offer_id);
+                                                            alert('Offer ID has been copied to clipboard')
+                                                        }} size={15}/>
+                                                        <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
+                                                            <span>{listing.offer_id}</span>
+                                                        </ReactTooltip>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </Col>
 
-                                        <div style={{width: '150px'}}>quantity: {listing.quantity}</div>
-
-                                        <div style={{width: '100px'}}>seller: {listing.username}</div>
-
-                                        <div className="d-flex align-items-center" style={{width: '100px'}} data-tip
-                                             data-for={`offerID${key}`}>
-                                            {this.to_ellipsis(listing.offer_id, 5, 5)}
-                                            <CgCopy className="ml-1" onClick={() => {
-                                                copy(listing.offer_id);
-                                                alert('Offer ID has been copied to clipboard')
-                                            }} size={15}/>
-                                            <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
-                                                <span>{listing.offer_id}</span>
-                                            </ReactTooltip>
-                                        </div>
-
-                                        <div style={{width: '100px'}}>
+                                        <div className="text-center">
                                             {listing.quantity <= 0 ?
                                                 (<button className="search-button" disabled>
-                                                    SOLD OUT
+                                                    Sold out
                                                 </button>)
                                                 :
                                                 (<button style={{fontSize: '1.5rem'}} className="search-button"
                                                          onClick={() => this.handleShowPurchaseForm(listing, data)}>
-                                                    BUY
+                                                    View listing
                                                 </button>)
                                             }
                                         </div>
                                     </Col>
                                 )
-                            } catch(err) {
+                            } catch (err) {
                                 console.error(`error`);
                                 console.error(err);
                             }
@@ -3427,7 +3440,7 @@ class WalletHome extends React.Component {
                                 rowContents = [];
                             }
                             return acc;
-                        },[]);
+                        }, []);
                     }
 
                     return (
@@ -3460,121 +3473,88 @@ class WalletHome extends React.Component {
                                         style={{position: 'absolute', right: '15px', color: 'red'}}
                                         size={20}
                                         onClick={this.handleClosePurchaseForm}/></div>
+                                <Row>
+                                    <Form id="purchase_item"
+                                          onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
 
-                                <Form id="purchase_item"
-                                      onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
-                                    <div className="d-flex flex-column p-3">
+                                    <Col md={4}>
+                                    <div>
+                                            {this.state.show_purchase_offer_data.shipping &&
+                                            <div>
+                                                <h2>Shipping Info</h2>
+                                                <Row>
+                                                    <Col md={6}>
+                                                        <label>First Name:</label>
+                                                        <Form.Control required name="first_name"/>
+                                                    </Col>
+                                                    <Col md={6}>
+                                                        <label>Last Name:</label>
+                                                        <Form.Control required name="last_name"/>
+                                                    </Col>
 
-                                        {this.state.show_purchase_offer_data.nft ?
-                                            (<div style={{width: '300px'}} className="d-flex flex-column mt-2">
-                                                <label>
-                                                    NFT Receive Address
-                                                </label>
-                                                <Form.Control name="eth_address" rows="3"/>
-                                            </div>)
-                                            :
-                                            ''
-                                        }
-
-                                        {this.state.show_purchase_offer_data.shipping &&
-                                        <div>
-                                            <h2>Shipping Info</h2>
-                                            <div className="d-flex justify-content-between mt-3">
-                                                <div style={{width: '45%'}} className="d-flex flex-column">
-                                                    <label>First Name:</label>
-                                                    <Form.Control name="first_name"/>
-                                                </div>
-
-                                                <div style={{width: '45%'}} className="d-flex flex-column">
-                                                    <label>Last Name:</label>
-                                                    <Form.Control name="last_name"/>
-                                                </div>
-                                            </div>
-
-                                            <div style={{width: '90%'}} className="d-flex flex-column mt-3">
+                                                </Row>
                                                 <label>Address Line 1:</label>
-                                                <Form.Control name="address1"/>
-                                            </div>
+                                                <Form.Control required name="address1"/>
 
-                                            <div style={{width: '90%'}} className="d-flex flex-column mt-3">
                                                 <label>Address Line 2:</label>
                                                 <Form.Control name="address2"/>
-                                            </div>
 
-                                            <div className="d-flex justify-content-between mt-3">
-                                                <div style={{width: '30%'}} className="d-flex flex-column">
-                                                    <label>City:</label>
-                                                    <Form.Control name="city"/>
-                                                </div>
+                                                <label>City:</label>
+                                                <Form.Control required name="city"/>
 
-                                                <div style={{width: '30%'}} className="d-flex flex-column">
-                                                    <label>State/Country:</label>
-                                                    <Form.Control name="state"/>
-                                                </div>
+                                                <label>State/Country:</label>
+                                                <Form.Control required name="state"/>
 
-                                                <div style={{width: '30%'}} className="d-flex flex-column">
-                                                    <label>Zip/Area code:</label>
-                                                    <Form.Control name="zipcode"/>
-                                                </div>
-                                            </div>
+                                                <label>Zip/Area code:</label>
+                                                <Form.Control required name="zipcode"/>
 
-                                            <div className="d-flex flex-column mt-3">
                                                 <label>Country:</label>
                                                 <Form.Control name="country"/>
-                                            </div>
 
-                                            <div className="d-flex flex-column mt-3">
                                                 <label>Email:</label>
                                                 <Form.Control type="email" name="email_address"/>
-                                            </div>
 
-                                            <div className="d-flex flex-column mt-3">
                                                 <label>Phone:</label>
                                                 <Form.Control name="phone_number"/>
                                             </div>
-                                        </div>
-                                        }
-                                        {this.state.show_purchase_offer_data.open_message &&
-                                        <div style={{width: '300px'}} className="d-flex flex-column mt-3">
-                                            <label>NFT Ethereum Address:</label>
-                                            <Form.Control name="message"/>
-                                        </div>
-                                        }
+                                            }
 
-                                        <div className="d-flex align-items-center mt-3">
-                                            <label className="d-flex align-items-center">
-                                                Mixins:
-                                                <IconContext.Provider value={{color: 'black', size: '20px'}}>
-                                                    <FaInfoCircle data-tip data-for='apiInfo'
-                                                                  className="blockchain-icon mx-4"/>
+                                            <div className="d-flex align-items-center mt-3">
+                                                <label className="d-flex align-items-center">
+                                                    Mixins:
+                                                    <IconContext.Provider value={{color: 'black', size: '20px'}}>
+                                                        <FaInfoCircle data-tip data-for='apiInfo'
+                                                                      className="blockchain-icon mx-4"/>
 
-                                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                        <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
                                                                     Mixins are transactions that have also been sent on the Safex blockchain. <br/>
                                                                     They are combined with yours for private transactions.<br/>
                                                                     Changing this from the default could hurt your privacy.<br/>
                                                                 </span>
-                                                    </ReactTooltip>
-                                                </IconContext.Provider>
-                                            </label>
-                                            <Form.Control
-                                                className="ml-2"
-                                                style={{width: "50px"}}
-                                                name="mixins"
-                                                as="select"
-                                                defaultValue="7">
-                                                <option>1</option>
-                                                <option>2</option>
-                                                <option>3</option>
-                                                <option>4</option>
-                                                <option>5</option>
-                                                <option>6</option>
-                                                <option>7</option>
-                                            </Form.Control>
+                                                        </ReactTooltip>
+                                                    </IconContext.Provider>
+                                                </label>
+                                                <Form.Control
+                                                    className="ml-2"
+                                                    style={{width: "50px"}}
+                                                    name="mixins"
+                                                    as="select"
+                                                    defaultValue="7">
+                                                    <option>1</option>
+                                                    <option>2</option>
+                                                    <option>3</option>
+                                                    <option>4</option>
+                                                    <option>5</option>
+                                                    <option>6</option>
+                                                    <option>7</option>
+                                                </Form.Control>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="d-flex flex-column">
-                                        <div className="d-flex" style={{height: '128px'}}>
+                                </Col>
+                                <Col md={8}>
+                                    <div>
+                                        <Row>
                                             {this.state.show_purchase_offer_data.main_image && <Image
                                                 className="product-image pointer"
                                                 src={this.state.show_purchase_offer_data.main_image}
@@ -3630,14 +3610,15 @@ class WalletHome extends React.Component {
                                                          src={this.state.show_modal_for_image}/>
                                                 </div>
                                             </ReactModal>
-                                        </div>
+                                        </Row>
+                                        <Row>
+                                            <hr className="border border-light w-100"></hr>
 
-                                        <hr className="border border-light w-100"></hr>
-
-                                        <div className="d-flex mt-3">
-                                            <label>Title:</label>
-                                            <span className="ml-2">{this.state.show_purchase_offer.title}</span>
-                                        </div>
+                                            <div className="d-flex mt-3">
+                                                <label>Title:</label>
+                                                <span className="ml-2">{this.state.show_purchase_offer.title}</span>
+                                            </div>
+                                        </Row>
 
                                         <div className="d-flex mt-3">
                                             <label>Seller:</label>
@@ -3708,7 +3689,11 @@ class WalletHome extends React.Component {
                                             <button className="mt-3"> Buy </button>
                                         }
                                     </div>
+                                </Col>
                                 </Form>
+                                </Row>
+
+
                             </ReactModal>
 
                             <ReactModal
@@ -3888,11 +3873,17 @@ class WalletHome extends React.Component {
                                         offerId={this.state.buyerSelectOffer}/>
                                 </div>
                                 :
-                                    <div style={{marginLeft: '10%', width: '80%', maxHeight: '550px', overflowY: 'scroll', background: 'white'}}>
-                                        {table_of_listings ||
-                                        <div className="products-table-row p-4 text-align-center">Click "Show Products"
-                                            to load products.</div>}
-                                    </div>
+                                <div style={{
+                                    marginLeft: '6%',
+                                    width: '84%',
+                                    maxHeight: '550px',
+                                    overflowY: 'scroll',
+                                    background: 'white'
+                                }}>
+                                    {table_of_listings ||
+                                    <div className="products-table-row p-4 text-align-center">Click "Show Products"
+                                        to load products.</div>}
+                                </div>
 
 
                             }
