@@ -94,16 +94,11 @@ export default function Stake(props) {
             <div className="w-100 d-flex align-items-center">
                 <label>Staked: {props.stakedBalance}</label>
 
-                <select
-                    className="ml-3"
-                    style={{width: "190px"}}
-                    name="selected_stake"
-                >
+                <select className="ml-3" style={{width: "190px"}} name="selected_stake">
                     {props.tokenStakes.map((staked, key) => {
                         return (
                             <option key={key}>
-                                {staked.tokenStaked / 10000000000} SFT at height{" "}
-                                {staked.blockHeight}
+                                `${staked.tokenStaked / 10000000000} SFT at height ${staked.blockHeight}`
                             </option>
                         );
                     })}

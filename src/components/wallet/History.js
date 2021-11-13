@@ -94,7 +94,7 @@ export default class History extends React.Component {
                         <td>{txn.direction}</td>
                         <td>{txn.pending}</td>
                         <td className="">{the_type}</td>
-                        <td>{txn.tokenAmount > 0 ? (`${txn.tokenAmount / 10000000000} SFT`) : (`${txn.amount / 10000000000 * 1.05} SFX`)}</td>
+                        <td>{(txn.transfers[2].amount / 10000000000) + (txn.transfers[1].amount / 10000000000)} SFX</td>
                         <td>{txn.fee / 10000000000}</td>
                         <td>{txn.blockHeight}</td>
                         <td>{txn.confirmations}</td>

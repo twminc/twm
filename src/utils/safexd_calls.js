@@ -73,3 +73,17 @@ export async function get_transactions(obj, txid) {
         return resp.data;
     })
 }
+
+
+export async function get_price_oracles(obj, currency) {
+    let t_obj = {};
+    t_obj.currency = currency;
+    t_obj.decode_as_json = true;
+    return axios({
+        method: 'POST',
+        url: 'http://' + obj.daemon_host + ':' + obj.daemon_port +  '/get_safex_price_pegs',
+        data: t_obj
+    }).then((resp) => {
+        return resp.data;
+    })
+}

@@ -28,7 +28,8 @@ import {
     get_staked_tokens,
     get_interest_map,
     daemon_parse_transaction,
-    get_transactions
+    get_transactions,
+    get_price_oracles
 } from '../../utils/safexd_calls';
 
 // Icon Imports
@@ -162,7 +163,8 @@ class WalletHome extends React.Component {
             user_registered: null,
             show_modal_for_image: null,
             token_stakes: [],
-            title_chars: 0
+            title_chars: 0,
+            price_oracles_list: []
         };
     }
 
@@ -1218,6 +1220,20 @@ class WalletHome extends React.Component {
             console.error(`error at checking if user is registered`);
             alert(`this user ${username} is not yet approved with the TWM API`);
             this.setState({selected_user: {username: username, index: index}, user_registered: false});
+        }
+
+
+        try {
+            let r_obj = {};
+            r_obj.daemon_host = this.state.daemon_host;
+            r_obj.daemon_port = this.state.daemon_port;
+            let p_oracles = await get_price_oracles(r_obj, `USD`);
+            console.log(p_oracles);
+            this.setState({price_oracles_list: p_oracles.price_pegs});
+
+        } catch(err) {
+            console.error(err);
+            console.error(`error at setting the price oracles`);
         }
     };
 
@@ -3397,7 +3413,7 @@ class WalletHome extends React.Component {
                                         </Col>
                                         <Col md={8}>
                                             <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                <li>{listing.price} <img width="20px" className="ml-2" src={sfxLogo}/>
+                                                <li>{listing.price} <img width="14px" src={sfxLogo}/>
                                                 </li>
                                                 <li>{listing.quantity}</li>
                                                 <li>{listing.username}</li>
@@ -3436,8 +3452,10 @@ class WalletHome extends React.Component {
                                 console.error(err);
                             }
                             if (key % 4 === 3) {
-                                acc.push(<Row>{rowContents}</Row>);
+                                acc.push(<Row key={key}>{rowContents}</Row>);
                                 rowContents = [];
+                            } else if (this.state.twm_url_offers.length < 4 && key === this.state.twm_url_offers.length - 1) {
+                                acc.push(<Row key={key}>{rowContents}</Row>);
                             }
                             return acc;
                         }, []);
@@ -3477,220 +3495,225 @@ class WalletHome extends React.Component {
                                     <Form id="purchase_item"
                                           onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
 
-                                    <Col md={4}>
-                                    <div>
-                                            {this.state.show_purchase_offer_data.shipping &&
+                                        <Col md={4}>
                                             <div>
-                                                <h2>Shipping Info</h2>
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <label>First Name:</label>
-                                                        <Form.Control required name="first_name"/>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <label>Last Name:</label>
-                                                        <Form.Control required name="last_name"/>
-                                                    </Col>
+                                                {this.state.show_purchase_offer_data.shipping &&
+                                                <div>
+                                                    <h2>Shipping Info</h2>
+                                                    <Row>
+                                                        <Col md={6}>
+                                                            <label>First Name:</label>
+                                                            <Form.Control required name="first_name"/>
+                                                        </Col>
+                                                        <Col md={6}>
+                                                            <label>Last Name:</label>
+                                                            <Form.Control required name="last_name"/>
+                                                        </Col>
 
-                                                </Row>
-                                                <label>Address Line 1:</label>
-                                                <Form.Control required name="address1"/>
+                                                    </Row>
+                                                    <label>Address Line 1:</label>
+                                                    <Form.Control required name="address1"/>
 
-                                                <label>Address Line 2:</label>
-                                                <Form.Control name="address2"/>
+                                                    <label>Address Line 2:</label>
+                                                    <Form.Control name="address2"/>
 
-                                                <label>City:</label>
-                                                <Form.Control required name="city"/>
+                                                    <label>City:</label>
+                                                    <Form.Control required name="city"/>
 
-                                                <label>State/Country:</label>
-                                                <Form.Control required name="state"/>
+                                                    <label>State/Country:</label>
+                                                    <Form.Control required name="state"/>
 
-                                                <label>Zip/Area code:</label>
-                                                <Form.Control required name="zipcode"/>
+                                                    <label>Zip/Area code:</label>
+                                                    <Form.Control required name="zipcode"/>
 
-                                                <label>Country:</label>
-                                                <Form.Control name="country"/>
+                                                    <label>Country:</label>
+                                                    <Form.Control name="country"/>
 
-                                                <label>Email:</label>
-                                                <Form.Control type="email" name="email_address"/>
+                                                    <label>Email:</label>
+                                                    <Form.Control type="email" name="email_address"/>
 
-                                                <label>Phone:</label>
-                                                <Form.Control name="phone_number"/>
-                                            </div>
-                                            }
+                                                    <label>Phone:</label>
+                                                    <Form.Control name="phone_number"/>
+                                                </div>
+                                                }
 
-                                            <div className="d-flex align-items-center mt-3">
-                                                <label className="d-flex align-items-center">
-                                                    Mixins:
-                                                    <IconContext.Provider value={{color: 'black', size: '20px'}}>
-                                                        <FaInfoCircle data-tip data-for='apiInfo'
-                                                                      className="blockchain-icon mx-4"/>
+                                                <div className="d-flex align-items-center mt-3">
+                                                    <label className="d-flex align-items-center">
+                                                        Mixins:
+                                                        <IconContext.Provider value={{color: 'black', size: '20px'}}>
+                                                            <FaInfoCircle data-tip data-for='apiInfo'
+                                                                          className="blockchain-icon mx-4"/>
 
-                                                        <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                            <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
                                                                     Mixins are transactions that have also been sent on the Safex blockchain. <br/>
                                                                     They are combined with yours for private transactions.<br/>
                                                                     Changing this from the default could hurt your privacy.<br/>
                                                                 </span>
-                                                        </ReactTooltip>
-                                                    </IconContext.Provider>
-                                                </label>
-                                                <Form.Control
-                                                    className="ml-2"
-                                                    style={{width: "50px"}}
-                                                    name="mixins"
-                                                    as="select"
-                                                    defaultValue="7">
-                                                    <option>1</option>
-                                                    <option>2</option>
-                                                    <option>3</option>
-                                                    <option>4</option>
-                                                    <option>5</option>
-                                                    <option>6</option>
-                                                    <option>7</option>
-                                                </Form.Control>
-                                            </div>
-                                        </div>
-                                </Col>
-                                <Col md={8}>
-                                    <div>
-                                        <Row>
-                                            {this.state.show_purchase_offer_data.main_image && <Image
-                                                className="product-image pointer"
-                                                src={this.state.show_purchase_offer_data.main_image}
-                                                onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.main_image})}></Image>}
-
-                                            {this.state.show_purchase_offer_data.image_2 &&
-                                            <Image className="product-image pointer ml-1"
-                                                   src={this.state.show_purchase_offer_data.image_2}
-                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_2})}></Image>}
-
-                                            {this.state.show_purchase_offer_data.image_3 &&
-                                            <Image className="product-image pointer ml-1"
-                                                   src={this.state.show_purchase_offer_data.image_3}
-                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_3})}></Image>}
-
-                                            {this.state.show_purchase_offer_data.image_4 &&
-                                            <Image className="product-image pointer ml-1"
-                                                   src={this.state.show_purchase_offer_data.image_4}
-                                                   onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}
-                                            <ReactModal
-                                                isOpen={!!this.state.show_modal_for_image}
-                                                onRequestClose={() => this.setState({show_modal_for_image: null})}
-                                                style={{
-                                                    overlay: {
-                                                        position: 'fixed',
-                                                        top: 0,
-                                                        left: 0,
-                                                        right: 0,
-                                                        bottom: 0,
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.75)'
-                                                    },
-                                                    content: {
-                                                        top: '50%',
-                                                        left: '50%',
-                                                        right: 'auto',
-                                                        bottom: 'auto',
-                                                        marginRight: '-50%',
-                                                        transform: 'translate(-50%, -50%)'
-                                                    }
-                                                }}>
-                                                <CgClose
-                                                    className="pointer bg-white"
-                                                    style={{
-                                                        position: 'absolute',
-                                                        top: '5px',
-                                                        right: '15px',
-                                                        color: 'red'
-                                                    }}
-                                                    size={20}
-                                                    onClick={() => this.setState({show_modal_for_image: null})}/>
-                                                <div className="mt-4">
-                                                    <img style={{maxHeight: '800px', maxWidth: '600px'}}
-                                                         src={this.state.show_modal_for_image}/>
+                                                            </ReactTooltip>
+                                                        </IconContext.Provider>
+                                                    </label>
+                                                    <Form.Control
+                                                        className="ml-2"
+                                                        style={{width: "50px"}}
+                                                        name="mixins"
+                                                        as="select"
+                                                        defaultValue="7">
+                                                        <option>1</option>
+                                                        <option>2</option>
+                                                        <option>3</option>
+                                                        <option>4</option>
+                                                        <option>5</option>
+                                                        <option>6</option>
+                                                        <option>7</option>
+                                                    </Form.Control>
                                                 </div>
-                                            </ReactModal>
-                                        </Row>
-                                        <Row>
-                                            <hr className="border border-light w-100"></hr>
-
-                                            <div className="d-flex mt-3">
-                                                <label>Title:</label>
-                                                <span className="ml-2">{this.state.show_purchase_offer.title}</span>
                                             </div>
-                                        </Row>
+                                        </Col>
+                                        <Col md={8}>
+                                            <div>
+                                                <Row>
+                                                    {this.state.show_purchase_offer_data.main_image && <Image
+                                                        className="product-image pointer"
+                                                        src={this.state.show_purchase_offer_data.main_image}
+                                                        onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.main_image})}></Image>}
 
-                                        <div className="d-flex mt-3">
-                                            <label>Seller:</label>
-                                            <span className="ml-2">{this.state.show_purchase_offer.username}</span>
-                                        </div>
+                                                    {this.state.show_purchase_offer_data.image_2 &&
+                                                    <Image className="product-image pointer ml-1"
+                                                           src={this.state.show_purchase_offer_data.image_2}
+                                                           onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_2})}></Image>}
 
-                                        <div className="d-flex align-items-center mt-3">
-                                            <label className="mb-0">Offer ID:</label>
-                                            <span className="ml-2">{this.state.show_purchase_offer.offer_id}</span>
-                                            <FaCopy
-                                                className="ml-4 pointer"
-                                                data-tip data-for='copyIDInfo'
-                                                onClick={() => {
-                                                    copy(this.state.show_purchase_offer.offer_id);
-                                                    alert("Copied offer ID to clipboard");
-                                                }}/>
-                                        </div>
+                                                    {this.state.show_purchase_offer_data.image_3 &&
+                                                    <Image className="product-image pointer ml-1"
+                                                           src={this.state.show_purchase_offer_data.image_3}
+                                                           onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_3})}></Image>}
 
-                                        <div style={{width: '50%'}} className="d-flex flex-column mt-3">
-                                            <label>Description:</label>
-                                            <span>{this.state.show_purchase_offer.description}</span>
-                                        </div>
+                                                    {this.state.show_purchase_offer_data.image_4 &&
+                                                    <Image className="product-image pointer ml-1"
+                                                           src={this.state.show_purchase_offer_data.image_4}
+                                                           onClick={() => this.setState({show_modal_for_image: this.state.show_purchase_offer_data.image_4})}></Image>}
+                                                    <ReactModal
+                                                        isOpen={!!this.state.show_modal_for_image}
+                                                        onRequestClose={() => this.setState({show_modal_for_image: null})}
+                                                        style={{
+                                                            overlay: {
+                                                                position: 'fixed',
+                                                                top: 0,
+                                                                left: 0,
+                                                                right: 0,
+                                                                bottom: 0,
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.75)'
+                                                            },
+                                                            content: {
+                                                                top: '50%',
+                                                                left: '50%',
+                                                                right: 'auto',
+                                                                bottom: 'auto',
+                                                                marginRight: '-50%',
+                                                                transform: 'translate(-50%, -50%)'
+                                                            }
+                                                        }}>
+                                                        <CgClose
+                                                            className="pointer bg-white"
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: '5px',
+                                                                right: '15px',
+                                                                color: 'red'
+                                                            }}
+                                                            size={20}
+                                                            onClick={() => this.setState({show_modal_for_image: null})}/>
+                                                        <div className="mt-4">
+                                                            <img style={{maxHeight: '800px', maxWidth: '600px'}}
+                                                                 src={this.state.show_modal_for_image}/>
+                                                        </div>
+                                                    </ReactModal>
+                                                </Row>
+                                                <Row>
+                                                    <hr className="border border-light w-100"></hr>
 
-                                        <div className="d-flex flex-column mt-3">
-                                            <label>Quantity:</label>
-                                            <div className="d-flex align-items-center">
-                                                <Form.Control
-                                                    style={{width: "60px"}}
-                                                    className="light-blue-back"
-                                                    id="quantity"
-                                                    name="quantity"
-                                                    type="number"
-                                                    onChange={e => this.setState({quantity_input: e.target.value})}
-                                                    max={this.state.show_purchase_offer.quantity}/>
-                                                <span
-                                                    className="ml-2"> / {this.state.show_purchase_offer.quantity} available</span>
-                                            </div>
-                                        </div>
+                                                    <div className="d-flex mt-3">
+                                                        <label>Title:</label>
+                                                        <span
+                                                            className="ml-2">{this.state.show_purchase_offer.title}</span>
+                                                    </div>
+                                                </Row>
 
-                                        <div className="d-flex mt-3">
-                                            <div className="d-flex align-items-center">
-                                                <label className="mb-0">Price:</label>
-                                                <div className="d-flex align-items-center">
+                                                <div className="d-flex mt-3">
+                                                    <label>Seller:</label>
+                                                    <span
+                                                        className="ml-2">{this.state.show_purchase_offer.username}</span>
+                                                </div>
+
+                                                <div className="d-flex align-items-center mt-3">
+                                                    <label className="mb-0">Offer ID:</label>
+                                                    <span
+                                                        className="ml-2">{this.state.show_purchase_offer.offer_id}</span>
+                                                    <FaCopy
+                                                        className="ml-4 pointer"
+                                                        data-tip data-for='copyIDInfo'
+                                                        onClick={() => {
+                                                            copy(this.state.show_purchase_offer.offer_id);
+                                                            alert("Copied offer ID to clipboard");
+                                                        }}/>
+                                                </div>
+
+                                                <div style={{width: '50%'}} className="d-flex flex-column mt-3">
+                                                    <label>Description:</label>
+                                                    <span>{this.state.show_purchase_offer.description}</span>
+                                                </div>
+
+                                                <div className="d-flex flex-column mt-3">
+                                                    <label>Quantity:</label>
+                                                    <div className="d-flex align-items-center">
+                                                        <Form.Control
+                                                            style={{width: "60px"}}
+                                                            className="light-blue-back"
+                                                            id="quantity"
+                                                            name="quantity"
+                                                            type="number"
+                                                            onChange={e => this.setState({quantity_input: e.target.value})}
+                                                            max={this.state.show_purchase_offer.quantity}/>
+                                                        <span
+                                                            className="ml-2"> / {this.state.show_purchase_offer.quantity} available</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="d-flex mt-3">
+                                                    <div className="d-flex align-items-center">
+                                                        <label className="mb-0">Price:</label>
+                                                        <div className="d-flex align-items-center">
                                                     <span
                                                         className="ml-2">{this.state.show_purchase_offer.price} SFX</span>
-                                                    <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
-                                                </div>
-                                            </div>
+                                                            <img className="ml-2" width="20px" className="ml-2"
+                                                                 src={sfxLogo}/>
+                                                        </div>
+                                                    </div>
 
-                                            <div className="d-flex align-items-center ml-3">
-                                                <label className="mb-0">Total:</label>
-                                                <div className="d-flex align-items-center">
+                                                    <div className="d-flex align-items-center ml-3">
+                                                        <label className="mb-0">Total:</label>
+                                                        <div className="d-flex align-items-center">
                                                     <span
                                                         className="ml-2">{this.state.show_purchase_offer.price * (this.state.quantity_input || 0)} SFX</span>
-                                                    <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
+                                                            <img className="ml-2" width="20px" className="ml-2"
+                                                                 src={sfxLogo}/>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        {this.state.showLoader ?
-                                            <Loader
-                                                className="justify-content-center align-content-center"
-                                                type="Bars"
-                                                color="#00BFFF"
-                                                height={50}
-                                                width={50}/>
-                                            :
-                                            <button className="mt-3"> Buy </button>
-                                        }
-                                    </div>
-                                </Col>
-                                </Form>
+                                                {this.state.showLoader ?
+                                                    <Loader
+                                                        className="justify-content-center align-content-center"
+                                                        type="Bars"
+                                                        color="#00BFFF"
+                                                        height={50}
+                                                        width={50}/>
+                                                    :
+                                                    <button className="mt-3"> Buy </button>
+                                                }
+                                            </div>
+                                        </Col>
+                                    </Form>
                                 </Row>
 
 
@@ -3891,6 +3914,11 @@ class WalletHome extends React.Component {
                     );
 
                 case "merchant": {
+                    //drop down of price oracles, selected by oracle id
+
+
+
+
                     var accounts_table = this.state.usernames.map((user, key) => {
                         let avatar = '';
                         try {
