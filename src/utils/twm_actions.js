@@ -39,7 +39,6 @@ export async function save_twm_file(filepath, content, password, hash1) {
     }
 };
 
-
 export async function open_twm_file(filepath, password) {
     try {
         let twm_file = await fs.readFile(filepath);
@@ -68,7 +67,6 @@ export async function open_twm_file(filepath, password) {
         return {error: `error reading file ${filepath}`};
     }
 };
-
 
 export async function register_api(twm_api_url = 'http://127.0.0.1:17700', r_obj) {
     return axios({

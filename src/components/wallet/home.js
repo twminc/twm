@@ -149,7 +149,7 @@ class WalletHome extends React.Component {
             merchantTabs: 'accounts',
             showLoader: false,
             nft_switch: false,
-            shipping_switch: false,
+            shipping_switch: true,
             open_message_switch: false,
             showMessages: false,
             currentMessage: {},
@@ -1065,7 +1065,7 @@ class WalletHome extends React.Component {
             this.setState({
                 show_new_offer_form: true,
                 nft_switch: false,
-                shipping_switch: false,
+                shipping_switch: true,
                 open_message_switch: false
             });
         } else if (!this.state.user_registered) {
@@ -1231,7 +1231,7 @@ class WalletHome extends React.Component {
             console.log(p_oracles);
             this.setState({price_oracles_list: p_oracles.price_pegs});
 
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             console.error(`error at setting the price oracles`);
         }
@@ -1266,11 +1266,23 @@ class WalletHome extends React.Component {
         if (vees.barcode.value.length > 0) {
             o_obj.barcode = vees.barcode.value;
         }
-        if (vees.weight.value.length > 0) {
-            o_obj.weight = vees.weight.value;
-        }
         if (vees.country.value.length > 0) {
             o_obj.country = vees.country.value;
+        }
+
+        let the_peg = {};
+        let peg_used = false;
+        the_peg.id = '';
+        if (vees.selected_price_oracle.value === 'none') {
+            the_peg = 0;
+        } else {
+            the_peg.id = this.state.price_oracles_list[vees.selected_price_oracle.selectedIndex].price_peg_id;
+            alert(the_peg.id);
+            peg_used = true;
+        }
+        let min_sfx_p = 0;
+        if (vees.min_sfx_price.value > 0) {
+            min_sfx_p = vees.min_sfx_price.value;
         }
 
         o_obj.shipping = this.state.shipping_switch;
@@ -1286,6 +1298,9 @@ class WalletHome extends React.Component {
                 e.target.price.value,
                 e.target.quantity.value,
                 JSON.stringify(o_obj),
+                peg_used,
+                the_peg.id,
+                min_sfx_p,
                 mixins);
             console.log(create_offer_tx);
             let confirmed_fee = window.confirm(`The fee will be:  ${create_offer_tx.fee() / 10000000000} SFX
@@ -1348,10 +1363,10 @@ class WalletHome extends React.Component {
         }
     };
 
-    list_offer_async = async (wallet, username, title, price, quantity, data, mixins) => {
+    list_offer_async = async (wallet, username, title, price, quantity, data, peg_used, peg_id, min_sfx_price, mixins) => {
         return new Promise((resolve, reject) => {
             try {
-                create_offer(wallet, username, title, price, quantity, data, mixins, (err, res) => {
+                create_offer(wallet, username, title, price, quantity, data, peg_used, peg_id, min_sfx_price, mixins, (err, res) => {
                     if (err) {
                         console.error(err);
                         console.error(`Error at first callback create new offer transaction`);
@@ -3193,14 +3208,14 @@ class WalletHome extends React.Component {
                               price,
                               quantity,
                               data,
+                              safex_offer_price_peg_used,
                               price_peg_id,
                               min_sfx_price,
-                              safex_offer_price_peg_used,
                               active,
                               mixins) => {
         return new Promise((resolve, reject) => {
             try {
-                edit_offer(wallet, offerid, username, title, price, quantity, data, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixins, (err, res) => {
+                edit_offer(wallet, offerid, username, title, price, quantity, data, safex_offer_price_peg_used, price_peg_id, min_sfx_price, active, mixins, (err, res) => {
                     if (err) {
                         console.error(err);
                         console.error(`Error at first callback edit offer transaction`);
@@ -3916,7 +3931,15 @@ class WalletHome extends React.Component {
                 case "merchant": {
                     //drop down of price oracles, selected by oracle id
 
-
+                    var price_oracles_drop = this.state.price_oracles_list.map((oracle, key) => {
+                        return (
+                            <option key={key}>
+                                {oracle.creator} {oracle.price_peg_id.slice(0, 12)} rate {(1 / (oracle.rate / 10000000000)).toFixed(6)} {oracle.currency} per
+                                SFX
+                            </option>
+                        );
+                    });
+                    price_oracles_drop.push(<option key={price_oracles_drop.length}>none</option>)
 
 
                     var accounts_table = this.state.usernames.map((user, key) => {
@@ -4128,81 +4151,56 @@ class WalletHome extends React.Component {
                                                            roundedCircle/>
                                                 </Col>
                                             </Row>
-                                            <Row>
+                                            <Row className="no-gutters justify-content-between w-100">
                                                 <Form.Group md="12" as={Col}>
                                                     <Form.Label>Title (max 80 characters) {this.state.title_chars} /
                                                         80</Form.Label>
 
-                                                    <Form.Control name="title" onChange={this.title_chars_change}
-                                                                  defaultValue={this.state.show_edit_offer.title}/>
-                                                </Form.Group>
-
-                                                <Form.Group md="12" as={Col}>
-                                                    <Form.Label>Description</Form.Label>
-
-                                                    <Form.Control maxLength="2000" as="textarea" name="description"
-                                                                  defaultValue={data.description}/>
-                                                </Form.Group>
-
-                                                <Form.Group md="3" as={Col}>
-                                                    <Form.Label>Price (SFX)</Form.Label>
-
-                                                    <Form.Control
-                                                        name="price"
-                                                        defaultValue={1}
-                                                    />
-                                                </Form.Group>
-
-                                                <Form.Group md="3" as={Col}>
-                                                    <Form.Label>Available Quantity</Form.Label>
-
-                                                    <Form.Control
-                                                        name="quantity"
-                                                        defaultValue={1}
-                                                    />
-                                                </Form.Group>
-
-                                                <Form.Group md="3" as={Col}>
-                                                    <Form.Label>SKU</Form.Label>
-
-                                                    <Form.Control name="sku" defaultValue={data.sku}/>
-                                                </Form.Group>
-
-                                                <Form.Group md="3" as={Col}>
-                                                    <Form.Label>Barcode (ISBN, UPC, GTIN, etc)</Form.Label>
-
-                                                    <Form.Control
-                                                        name="barcode"
-                                                        defaultValue={data.barcode}/>
-                                                </Form.Group>
-
-                                                <Form.Group md="4" as={Col}>
-                                                    <Form.Label>Weight</Form.Label>
-
-                                                    <Form.Control name="weight" defaultValue={data.weight}/>
-                                                </Form.Group>
-                                                <Form.Group md="4" as={Col}>
-                                                    <Form.Label>Units</Form.Label>
-
-                                                    <Form.Control name="units" as="select" defaultValue="oz">
-                                                        <option value="g">Grams</option>
-                                                        <option value="kg">Kilograms</option>
-                                                        <option value="oz">Ounces</option>
-                                                        <option value="lb">Pounds</option>
-                                                    </Form.Control>
-                                                </Form.Group>
-
-                                                <Form.Group md="4" as={Col}>
-                                                    <Form.Label>Country of Origin</Form.Label>
-
-                                                    <Form.Control name="country" defaultValue={data.country}
-                                                                  placedholder="your location"/>
+                                                    <Form.Control name="title" onChange={this.title_chars_change} />
                                                 </Form.Group>
                                             </Row>
-
+                                            <Row className="no-gutters justify-content-between w-100">
+                                                <Form.Group md="12" as={Col}>
+                                                    <Form.Label>Description</Form.Label>
+                                                    <Form.Control maxLength="2000" as="textarea" name="description" />
+                                                </Form.Group>
+                                            </Row>
+                                            <Row className="w-100">
+                                                <Col sm={4}>
+                                                    <Form.Label>Available Quantity</Form.Label>
+                                                    <Form.Control name="quantity" defaultValue={1} />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>SKU</Form.Label>
+                                                    <Form.Control name="sku" />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>(ISBN, UPC, GTIN, ASIN, etc)</Form.Label>
+                                                    <Form.Control name="barcode" />
+                                                </Col>
+                                            </Row>
                                             <Row>
-
-                                                <Form.Group md="3" as={Col}>
+                                                <Col sm={2}>
+                                                    <Form.Label>Price (SFX)</Form.Label>
+                                                    <Form.Control name="price" defaultValue={1} />
+                                                </Col>
+                                                <Col sm={2}>
+                                                    <Form.Label>Min Price (SFX)</Form.Label>
+                                                    <Form.Control name="min_sfx_price" defaultValue={1} />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>Price Oracle</Form.Label>
+                                                    <select name="selected_price_oracle">
+                                                        {price_oracles_drop}
+                                                    </select>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={3}>
+                                                    <Form.Label>Country of Origin</Form.Label>
+                                                    <Form.Control name="country" placedholder="your location"/>
+                                                </Col>
+                                                <Col md={3}>
                                                     <Form.Check
                                                         label="Shipping"
                                                         checked={this.state.shipping_switch}
@@ -4210,6 +4208,8 @@ class WalletHome extends React.Component {
                                                         type="switch"
                                                         id="shipping-switch"
                                                         name="shipping"/>
+                                                </Col>
+                                                <Col md={3}>
                                                     <Form.Check
                                                         label="NFT"
                                                         checked={this.state.nft_switch}
@@ -4217,68 +4217,44 @@ class WalletHome extends React.Component {
                                                         type="switch"
                                                         id="nft-switch"
                                                         name="nft"/>
-                                                    <Form.Check
-                                                        label="Open Messages"
-                                                        checked={this.state.open_message_switch}
-                                                        onChange={this.change_open_message_switch}
-                                                        type="switch"
-                                                        id="open-switch"
-                                                        name="open_message"/>
-                                                </Form.Group>
-                                                <Col md="3">
-
                                                 </Col>
-                                                <Col md="3">
-
-                                                </Col>
-                                                <Col md="3">
-
-                                                </Col>
-
-
                                             </Row>
                                             <Row>
-                                                <Col md="4">
-                                                    <Form.Group as={Col}>
-                                                        <Form.Label>Username</Form.Label>
-
-                                                        <Form.Control disabled name="username"
-                                                                      value={selected.username}/>
-                                                    </Form.Group>
+                                                <Col md={4}>
+                                                    <Form.Label>Username</Form.Label>
+                                                    <Form.Control disabled name="username" value={selected.username}/>
                                                 </Col>
-                                                <Col md="4">
+                                                <Col md={4}>
                                                     <button type="submit">
                                                         List Offer
                                                     </button>
                                                 </Col>
-                                                <Col md="4">
-                                                    <Form.Group md="4" as={Col}>
-                                                        <Form.Label>
-                                                            Mixins
-                                                            <IconContext.Provider value={{color: 'black', size: '5px'}}>
-                                                                <FaInfoCircle data-tip data-for='apiInfo'
-                                                                              className="mx-4 white-text"/>
+                                                <Col md={4}>
+                                                    <Form.Label>
+                                                        Mixins
+                                                        <IconContext.Provider value={{color: 'black', size: '5px'}}>
+                                                            <FaInfoCircle data-tip data-for='apiInfo'
+                                                                          className="mx-4 white-text"/>
 
-                                                                <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                            <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
                                                                     Mixins are transactions that have also been sent on the Safex blockchain. <br/>
                                                                     They are combined with yours for private transactions.<br/>
                                                                     Changing this from the default could hurt your privacy.<br/>
                                                                 </span>
-                                                                </ReactTooltip>
-                                                            </IconContext.Provider>
-                                                        </Form.Label>
+                                                            </ReactTooltip>
+                                                        </IconContext.Provider>
+                                                    </Form.Label>
 
-                                                        <Form.Control name="mixins" as="select" defaultValue="7">
-                                                            <option>1</option>
-                                                            <option>2</option>
-                                                            <option>3</option>
-                                                            <option>4</option>
-                                                            <option>5</option>
-                                                            <option>6</option>
-                                                            <option>7</option>
-                                                        </Form.Control>
-                                                    </Form.Group>
+                                                    <Form.Control name="mixins" as="select" defaultValue="7">
+                                                        <option>1</option>
+                                                        <option>2</option>
+                                                        <option>3</option>
+                                                        <option>4</option>
+                                                        <option>5</option>
+                                                        <option>6</option>
+                                                        <option>7</option>
+                                                    </Form.Control>
                                                 </Col>
                                             </Row>
                                         </Form>
@@ -4425,11 +4401,7 @@ class WalletHome extends React.Component {
                                                             </ReactTooltip>
                                                         </IconContext.Provider>
 
-                                                        <Form.Control
-                                                            name="mixins"
-                                                            as="select"
-                                                            defaultValue="7"
-                                                        >
+                                                        <Form.Control name="mixins" as="select" defaultValue="7">
                                                             <option>1</option>
                                                             <option>2</option>
                                                             <option>3</option>
@@ -4438,19 +4410,11 @@ class WalletHome extends React.Component {
                                                             <option>6</option>
                                                             <option>7</option>
                                                         </Form.Control>
-
                                                     </Form.Group>
                                                 </Col>
                                             </Row>
 
-                                            <button
-                                                block
-                                                size="lg"
-                                                variant="success"
-                                                type="submit"
-                                                className="my-5"
-                                            >
-
+                                            <button block size="lg" variant="success" type="submit" className="my-5">
                                                 Create Account
                                             </button>
                                         </Form>

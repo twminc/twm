@@ -33,10 +33,21 @@ export async function stake_tokens(wallet, amount, mixin, callback) {
     }, callback);
 }
 
-export async function create_offer(wallet, username, title, price, quantity, description, mixin, callback) {
+export async function create_offer(wallet, username, title, price, quantity, description, peg_used, price_peg_id, min_sfx_price, mixin, callback) {
     let mixi = mixin >= 0 ? mixin : 6;
-    console.log(mixin);
-    let price2 = price * 10000000000;
+    console.log(`peg used ${peg_used}`)
+    console.log(`peg id ${price_peg_id}`)
+    console.log(`min price id ${min_sfx_price}`)
+    let price2;
+    let minprice2 = 0;
+    let pegid = '';
+    if (peg_used != true) {
+        price2 = price * 10000000000;
+    } else {
+        price2 = price * 10000000000;
+        minprice2 = min_sfx_price * 10000000000;
+        pegid = price_peg_id;
+    }
     wallet.createAdvancedTransaction({
         tx_type: '8', //create offer transaction
         safex_username: username,
@@ -44,7 +55,9 @@ export async function create_offer(wallet, username, title, price, quantity, des
         safex_offer_price: price2.toString(),
         safex_offer_quantity: quantity,
         safex_offer_description: description,
-        safex_offer_price_peg_used: 0,
+        safex_offer_price_peg_id: pegid,
+        safex_offer_price_peg_used: peg_used,
+        safex_offer_min_sfx_price: minprice2.toString(),
         mixin: mixi
     }, callback);
 }
@@ -80,9 +93,21 @@ export async function purchase_offer(wallet, cost, offer_id, quantity, mixin, ca
     }, callback);
 }
 
-export async function edit_offer(wallet, offerid, username, offer_title, offer_price, offer_quantity, offer_description, price_peg_id, min_sfx_price, safex_offer_price_peg_used, active, mixin, callback) {
+export async function edit_offer(wallet, offerid, username, offer_title, price, offer_quantity, offer_description, peg_used, price_peg_id, min_sfx_price, active, mixin, callback) {
     let mixi = mixin >= 0 ? mixin : 6;
-    let price2 = offer_price * 10000000000;
+    let price2;
+    console.log(`peg used ${peg_used}`)
+    console.log(`peg id ${price_peg_id}`)
+    console.log(`min price id ${min_sfx_price}`)
+    let minprice2 = 0;
+    let pegid = '';
+    if (peg_used != true) {
+        price2 = price * 10000000000;
+    } else {
+        price2 = price * 10000000000;
+        minprice2 = min_sfx_price * 10000000000;
+        pegid = price_peg_id;
+    }
     wallet.createAdvancedTransaction({
         tx_type: '9', //edit offer transaction
         safex_offer_id: offerid,
@@ -92,9 +117,9 @@ export async function edit_offer(wallet, offerid, username, offer_title, offer_p
         safex_offer_quantity: offer_quantity,
         safex_offer_description: offer_description,
         safex_offer_active: active,
-        safex_offer_price_peg_id: price_peg_id,
-        safex_offer_price_peg_used: safex_offer_price_peg_used,
-        safex_offer_min_sfx_price: min_sfx_price,
+        safex_offer_price_peg_id: pegid,
+        safex_offer_price_peg_used: peg_used,
+        safex_offer_min_sfx_price: minprice2.toString(),
         mixin: mixi
     }, callback);
 }

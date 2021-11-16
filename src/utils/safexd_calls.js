@@ -74,7 +74,6 @@ export async function get_transactions(obj, txid) {
     })
 }
 
-
 export async function get_price_oracles(obj, currency) {
     let t_obj = {};
     t_obj.currency = currency;
