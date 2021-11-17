@@ -291,6 +291,10 @@ export default class MerchantOffers extends React.Component {
                     refreshFn={e => this.showMessagesModal(e, this.state.selected_order)}
                     messages={this.getMerchantMessages()}
                     offerId={this.state.selected_offer.offerID}
+                    title={this.state.selected_offer.title}
+                    seller={this.state.selected_offer.seller}
+                    price={this.state.selected_offer.price}
+                    quantity={this.state.selected_order.quantity}
                     orderId={this.state.selected_order.order_id}/>
             </div>
         )

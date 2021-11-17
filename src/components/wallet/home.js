@@ -122,7 +122,7 @@ class WalletHome extends React.Component {
             blockchain_interest_history: [],
             blockchain_current_interest: {},
             twm_file: {},
-            show_purchase_offer: {title: '', quantity: 0, offerID: '', seller: ''},
+            show_purchase_offer: {title: '', quantity: 0, offerID: '', seller: '', price: ''},
             show_purchase_offer_data: {main_image: false},
             show_edit_offer_data: {
                 description: '',
@@ -134,6 +134,13 @@ class WalletHome extends React.Component {
                 barcode: '',
                 weight: '',
                 country: ''
+            },
+            show_purchase_order_obj: {
+                price_info: '',
+                fiat_bool: false,
+                oracl_curr: '',
+                min_fiat: 0,
+                fiat_price_sfx: 0
             },
             show_edit_offer: {},
             order_ids_selected: [],
@@ -165,7 +172,8 @@ class WalletHome extends React.Component {
             show_modal_for_image: null,
             token_stakes: [],
             title_chars: 0,
-            price_oracles_list: []
+            price_oracles_list: [],
+            quantity_input: 1
         };
     }
 
@@ -1092,9 +1100,9 @@ class WalletHome extends React.Component {
     };
 
     //show modal of Purchase Form
-    handleShowPurchaseForm = (listing, data) => {
+    handleShowPurchaseForm = (listing, data, order_obj) => {
         //here we need to fetch the pub keys of the seller.
-        this.setState({show_purchase_form: true, show_purchase_offer: listing, show_purchase_offer_data: data});
+        this.setState({quantity_input: 1, show_purchase_form: true, show_purchase_offer: listing, show_purchase_offer_data: data, show_purchase_order_obj: order_obj});
     };
 
     // Show order confirmed modal
@@ -2698,6 +2706,7 @@ class WalletHome extends React.Component {
         e.persist();
         console.log(JSON.stringify(listing));
         console.log(this.state.show_purchase_offer);
+        listing.price = this.state.show_purchase_order_obj.fiat_price_sfx;
 
         let quant = e.target.quantity.value;
 
@@ -3306,6 +3315,19 @@ class WalletHome extends React.Component {
         }
     };
 
+    handleChangeQuantity = (e) => {
+        e.preventDefault();
+        if (e.target.value > 0 && e.target.value <= this.state.show_purchase_offer.quantity) {
+            this.setState({quantity_input: e.target.value});
+        } else if (e.target.value > this.state.show_purchase_offer.quantity) {
+            this.setState({quantity_input: this.state.show_purchase_offer.quantity});
+            alert(`the max quantity is ${this.state.show_purchase_offer.quantity}`);
+        } else if (e.target.value < 1) {
+            this.setState({quantity_input: 1});
+            alert(`can't have a negative quantity :)`)
+        }
+    }
+
     handleBuyerOrders = (e) => {
         e.preventDefault();
         this.setState({
@@ -3375,10 +3397,20 @@ class WalletHome extends React.Component {
                 }
                 case "market":
                     //var table_of_listings = [];
+
                     if (this.state.offer_loading_flag === 'twmurl') {
                         let rowContents = [];
                         var table_of_listings = this.state.twm_url_offers.reduce((acc, listing, key) => {
                             listing.offerID = listing.offer_id;
+
+                            let od_obj = {};
+                            od_obj.fiat_price_sfx = 0;
+                            od_obj.fiat_bool = false;
+                            od_obj.oracl_curr = '';
+                            od_obj.min_fiat = 0;
+                            od_obj.price_info = <span></span>;
+                            od_obj.oracl_rate = 0;
+
 
                             let fiat_price_sfx = 0;
                             let fiat_bool = false;
@@ -3389,22 +3421,33 @@ class WalletHome extends React.Component {
                                 for (const oracl of this.state.price_oracles_list) {
                                     console.log(oracl);
                                     if (oracl.price_peg_id == listing.oracle_id) {
-                                        oracl_curr = oracl.currency;
+                                        od_obj.oracl_curr = oracl.currency;
+                                        od_obj.fiat_bool = true;
                                         fiat_bool = true;
+                                        oracl_curr = oracl.currency;
+                                        od_obj.min_price = listing.price;
+                                        od_obj.oracl_rate = (1 / (oracl.rate / 10000000000));
+                                        od_obj.fiat_price_sfx = listing.price /  (1 / (oracl.rate / 10000000000));
                                         fiat_price_sfx = listing.price /  (1 / (oracl.rate / 10000000000));
                                         price_row = <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px" src={sfxLogo}/></li>;
+                                        od_obj.price_info = <span>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px" src={sfxLogo}/></span>;
                                         console.log(listing.title);
                                         console.log(fiat_price_sfx);
                                         console.log(listing.min_price);
-                                        if (fiat_price_sfx < listing.min_price) {
+                                        if (od_obj.fiat_price_sfx < listing.min_price) {
                                             min_fiat = listing.min_price * (1 / (oracl.rate / 10000000000));
                                             price_row = <li>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img width="14px" src={sfxLogo}/></li>;
+                                            od_obj.price_info = <span>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img width="14px" src={sfxLogo}/></span>;
+                                            od_obj.fiat_price_sfx = listing.min_price;
+                                            od_obj.min_price = min_fiat;
                                         }
 
                                     }
                                 }
                             } else {
                                 price_row = <li>{listing.price} <img width="14px" src={sfxLogo}/></li>;
+                                od_obj.price_info = <span>{listing.price} <img width="14px" src={sfxLogo}/></span>;
+                                od_obj.fiat_price_sfx = listing.price;
                             }
 
                             try {
@@ -3444,7 +3487,7 @@ class WalletHome extends React.Component {
 
                                         <Col md={3}>
                                             <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                <li>$:</li>
+                                                <li>Price:</li>
                                                 <li>Qty:</li>
                                                 <li>Seller:</li>
                                                 <li>Id:</li>
@@ -3479,7 +3522,7 @@ class WalletHome extends React.Component {
                                                 </button>)
                                                 :
                                                 (<button style={{fontSize: '1.5rem'}} className="search-button"
-                                                         onClick={() => this.handleShowPurchaseForm(listing, data)}>
+                                                         onClick={() => this.handleShowPurchaseForm(listing, data, od_obj)}>
                                                     View listing
                                                 </button>)
                                             }
@@ -3673,12 +3716,16 @@ class WalletHome extends React.Component {
                                                 <Row>
                                                     <hr className="border border-light w-100"></hr>
 
-                                                    <div className="d-flex mt-3">
-                                                        <label>Title:</label>
-                                                        <span
-                                                            className="ml-2">{this.state.show_purchase_offer.title}</span>
+                                                    <div style={{width: '80%'}} className="d-flex mt-3">
+                                                        <h3
+                                                            className="ml-2">{this.state.show_purchase_offer.title}</h3>
                                                     </div>
                                                 </Row>
+
+                                                <div style={{width: '80%'}} className="d-flex flex-column mt-3">
+                                                    <label>Description:</label>
+                                                    <span>{this.state.show_purchase_offer.description}</span>
+                                                </div>
 
                                                 <div className="d-flex mt-3">
                                                     <label>Seller:</label>
@@ -3699,10 +3746,6 @@ class WalletHome extends React.Component {
                                                         }}/>
                                                 </div>
 
-                                                <div style={{width: '50%'}} className="d-flex flex-column mt-3">
-                                                    <label>Description:</label>
-                                                    <span>{this.state.show_purchase_offer.description}</span>
-                                                </div>
 
                                                 <div className="d-flex flex-column mt-3">
                                                     <label>Quantity:</label>
@@ -3713,8 +3756,11 @@ class WalletHome extends React.Component {
                                                             id="quantity"
                                                             name="quantity"
                                                             type="number"
-                                                            onChange={e => this.setState({quantity_input: e.target.value})}
-                                                            max={this.state.show_purchase_offer.quantity}/>
+                                                            defaultValue={1}
+                                                            onChange={this.handleChangeQuantity}
+                                                            max={this.state.show_purchase_offer.quantity}
+                                                            min={1}
+                                                            value={this.state.quantity_input}/>
                                                         <span
                                                             className="ml-2"> / {this.state.show_purchase_offer.quantity} available</span>
                                                     </div>
@@ -3725,9 +3771,7 @@ class WalletHome extends React.Component {
                                                         <label className="mb-0">Price:</label>
                                                         <div className="d-flex align-items-center">
                                                     <span
-                                                        className="ml-2">{this.state.show_purchase_offer.price} SFX</span>
-                                                            <img className="ml-2" width="20px" className="ml-2"
-                                                                 src={sfxLogo}/>
+                                                        className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
                                                         </div>
                                                     </div>
 
@@ -3735,22 +3779,19 @@ class WalletHome extends React.Component {
                                                         <label className="mb-0">Total:</label>
                                                         <div className="d-flex align-items-center">
                                                     <span
-                                                        className="ml-2">{this.state.show_purchase_offer.price * (this.state.quantity_input || 0)} SFX</span>
-                                                            <img className="ml-2" width="20px" className="ml-2"
-                                                                 src={sfxLogo}/>
+                                                        className="ml-2">
+                                                        {this.state.show_purchase_order_obj.fiat_bool ?
+                                                            (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(6)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
+                                                            ''}
+                                                        {this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)} SFX</span>
+                                                            <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {this.state.showLoader ?
-                                                    <Loader
-                                                        className="justify-content-center align-content-center"
-                                                        type="Bars"
-                                                        color="#00BFFF"
-                                                        height={50}
-                                                        width={50}/>
-                                                    :
-                                                    <button className="mt-3"> Buy </button>
+                                                    <Loader className="justify-content-center align-content-center" type="Bars" color="#00BFFF" height={50} width={50}/>
+                                                    : <button className="mt-3"> Buy </button>
                                                 }
                                             </div>
                                         </Col>
