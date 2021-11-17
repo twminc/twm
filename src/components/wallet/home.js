@@ -3380,6 +3380,33 @@ class WalletHome extends React.Component {
                         var table_of_listings = this.state.twm_url_offers.reduce((acc, listing, key) => {
                             listing.offerID = listing.offer_id;
 
+                            let fiat_price_sfx = 0;
+                            let fiat_bool = false;
+                            let oracl_curr = '';
+                            let min_fiat = 0;
+                            let price_row;
+                            if (listing.oracle == true) {
+                                for (const oracl of this.state.price_oracles_list) {
+                                    console.log(oracl);
+                                    if (oracl.price_peg_id == listing.oracle_id) {
+                                        oracl_curr = oracl.currency;
+                                        fiat_bool = true;
+                                        fiat_price_sfx = listing.price /  (1 / (oracl.rate / 10000000000));
+                                        price_row = <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px" src={sfxLogo}/></li>;
+                                        console.log(listing.title);
+                                        console.log(fiat_price_sfx);
+                                        console.log(listing.min_price);
+                                        if (fiat_price_sfx < listing.min_price) {
+                                            min_fiat = listing.min_price * (1 / (oracl.rate / 10000000000));
+                                            price_row = <li>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img width="14px" src={sfxLogo}/></li>;
+                                        }
+
+                                    }
+                                }
+                            } else {
+                                price_row = <li>{listing.price} <img width="14px" src={sfxLogo}/></li>;
+                            }
+
                             try {
                                 var data = {};
                                 data.description = listing.description;
@@ -3415,18 +3442,18 @@ class WalletHome extends React.Component {
                                             </div>
                                         </div>
 
-                                        <Col md={4}>
+                                        <Col md={3}>
                                             <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                <li>Price:</li>
-                                                <li>Quantity:</li>
+                                                <li>$:</li>
+                                                <li>Qty:</li>
                                                 <li>Seller:</li>
-                                                <li>Offer Id:</li>
+                                                <li>Id:</li>
                                             </ul>
                                         </Col>
-                                        <Col md={8}>
+                                        <Col md={9}>
                                             <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                <li>{listing.price} <img width="14px" src={sfxLogo}/>
-                                                </li>
+                                                {price_row}
+
                                                 <li>{listing.quantity}</li>
                                                 <li>{listing.username}</li>
                                                 <li>
