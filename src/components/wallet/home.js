@@ -149,6 +149,7 @@ class WalletHome extends React.Component {
             merchantTabs: 'accounts',
             showLoader: false,
             nft_switch: false,
+            active_offer_switch: true,
             shipping_switch: true,
             open_message_switch: false,
             showMessages: false,
@@ -942,6 +943,17 @@ class WalletHome extends React.Component {
         } catch (err) {
             console.error(err);
         }
+
+        try {
+            let r_obj = {};
+            r_obj.daemon_host = this.state.daemon_host;
+            r_obj.daemon_port = this.state.daemon_port;
+            let p_oracles = await get_price_oracles(r_obj);
+            console.log(p_oracles);
+            this.setState({price_oracles_list: p_oracles.price_pegs});
+        } catch(err) {
+            console.error(err);
+        }
     };
 
     load_offers_from_blockchain = async (e) => {
@@ -1063,6 +1075,7 @@ class WalletHome extends React.Component {
     handleShowNewOfferForm = () => {
         if (this.state.user_registered) {
             this.setState({
+                active_offer_switch: true,
                 show_new_offer_form: true,
                 nft_switch: false,
                 shipping_switch: true,
@@ -1106,6 +1119,7 @@ class WalletHome extends React.Component {
 
     //show modal of Edit Offer Form
     handleShowEditOfferForm = (listing) => {
+        console.log(listing);
         let nft_state = false;
         let shipping_state = false;
         let open_message_state = false;
@@ -1157,6 +1171,7 @@ class WalletHome extends React.Component {
             console.error(`error at the loading of listing data`);
         }
         this.setState({
+            active_offer_switch: listing.active,
             show_edit_offer_form: true,
             show_edit_offer: listing,
             nft_switch: nft_state,
@@ -1227,7 +1242,7 @@ class WalletHome extends React.Component {
             let r_obj = {};
             r_obj.daemon_host = this.state.daemon_host;
             r_obj.daemon_port = this.state.daemon_port;
-            let p_oracles = await get_price_oracles(r_obj, `USD`);
+            let p_oracles = await get_price_oracles(r_obj);
             console.log(p_oracles);
             this.setState({price_oracles_list: p_oracles.price_pegs});
 
@@ -1350,6 +1365,17 @@ class WalletHome extends React.Component {
             this.setState({nft_switch: false});
         }
     };
+
+    change_active_switch = () => {
+        if (!this.state.active_offer_switch) {
+            this.setState({
+                active_offer_switch: true
+            });
+        } else {
+            this.setState({active_offer_switch: false});
+        }
+    };
+
 
     change_open_message_switch = () => {
         if (!this.state.open_message_switch) {
@@ -3141,14 +3167,11 @@ class WalletHome extends React.Component {
         if (va.barcode.value.length > 0) {
             o_obj.barcode = va.barcode.value;
         }
-        if (va.weight.value.length > 0) {
-            o_obj.weight = va.weight.value;
-        }
         if (va.country.value.length > 0) {
             o_obj.country = va.country.value;
         }
         let active = 0;
-        if (va.active.value === 'True' || va.active.value === 'true') {
+        if (this.state.active_offer_switch === true) {
             active = 1;
         }
 
@@ -3346,32 +3369,6 @@ class WalletHome extends React.Component {
 
                             <Col sm={8} className="no-padding d-flex flex-column  justify-content-between">
                                 {this.renderAddressComponent()}
-                                <div className="d-flex align-items-center py-3"
-                                     style={{width: '90%', backgroundColor: 'white'}}>
-                                    <form className="flex-row" id="search-form" action="" method="">
-                                        <input
-                                            style={{height: '30px', width: '300px', paddingLeft: '10px'}}
-                                            type="text"
-                                            onChange={this.handle_change_api_fetch_url}
-                                            value="https://api.theworldmarketplace.com"/>
-
-                                        <button
-                                            style={{padding: '1rem', lineHeight: 0}}
-                                            onClick={this.load_offers_from_api} className="search-button ml-3">
-                                            Show Products
-                                        </button>
-                                        <button type="button" onClick={this.handleBuyerOrders}
-                                                style={{padding: '1rem', lineHeight: 0}}
-                                                className={`search-button ml-3 ${this.state.showBuyerOrders ? 'search-button--red' : ''}`}>
-                                            {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
-                                        </button>
-                                        <AiOutlineInfoCircle className="ml-2" size={20} data-tip
-                                                             data-for='apiInfo'/>
-                                        <ReactTooltip id='apiInfo' type='info' effect='solid'>
-                                            <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
-                                        </ReactTooltip>
-                                    </form>
-                                </div>
                             </Col>
                         </div>
                     );
@@ -3470,6 +3467,8 @@ class WalletHome extends React.Component {
                                 acc.push(<Row key={key}>{rowContents}</Row>);
                                 rowContents = [];
                             } else if (this.state.twm_url_offers.length < 4 && key === this.state.twm_url_offers.length - 1) {
+                                acc.push(<Row key={key}>{rowContents}</Row>);
+                            } else if (this.state.twm_url_offers.length > 4 && key === this.state.twm_url_offers.length - 1) {
                                 acc.push(<Row key={key}>{rowContents}</Row>);
                             }
                             return acc;
@@ -3930,6 +3929,55 @@ class WalletHome extends React.Component {
 
                 case "merchant": {
                     //drop down of price oracles, selected by oracle id
+                     console.log(this.state.show_edit_offer);
+
+                     /*
+                        active: true
+                        currency: "USD"
+                        description: "{"twm_version":1,"shipping":true,"nft":false,"open_message":false}"
+                        description_obj: {twm_version: 1, shipping: true, nft: false, open_message: false}
+                        minSfxPrice: "10000000000000"
+                        offerID: "d7c406f2546dbb698d117a49202cea4e03bd015ea4709e34e0a8183e33139cc6"
+                        price: "500000000000"
+                        pricePegID: "a44cf3986a61c54845e1188239242fd645ca5127f72554bed29fbcb64834b49f"
+                        pricePegUsed: true
+                        quantity: "0"
+                        seller: "xps"
+                        title: "testctrl2"
+                      */
+
+                    var selected_peg_key = 0;
+                    if (this.state.show_edit_offer.pricePegUsed === true) {
+                        for (const peg in this.state.price_oracles_list) {
+                            if (this.state.show_edit_offer.pricePegID == this.state.price_oracles_list[peg].price_peg_id) {
+                                selected_peg_key = peg;
+                                break;
+                            }
+                        }
+                    }
+                    console.log(selected_peg_key);
+                    console.log(this.state.price_oracles_list[selected_peg_key]);
+
+                    var edit_price_oracles_drop = this.state.price_oracles_list.map((oracle, key) => {
+                        if (oracle.price_peg_id == this.state.price_oracles_list[selected_peg_key].price_peg_id) {
+                            console.log(`WE HAVE SELECTED`)
+                            return (
+                                <option key={key} selected>
+                                    {oracle.creator} {oracle.price_peg_id.slice(0, 12)} rate {(1 / (oracle.rate / 10000000000)).toFixed(6)} {oracle.currency} per
+                                    SFX
+                                </option>
+                            );
+                        } else {
+                            return (
+                                <option key={key}>
+                                    {oracle.creator} {oracle.price_peg_id.slice(0, 12)} rate {(1 / (oracle.rate / 10000000000)).toFixed(6)} {oracle.currency} per
+                                    SFX
+                                </option>
+                            );
+                        }
+
+                    });
+                    edit_price_oracles_drop.push(<option key={edit_price_oracles_drop.length}>none</option>)
 
                     var price_oracles_drop = this.state.price_oracles_list.map((oracle, key) => {
                         return (
@@ -3958,31 +4006,19 @@ class WalletHome extends React.Component {
                             console.error(`there is no user data to parse it is not properly formatted`);
                         }
                         return (
-                            <Row className={
-                                this.state.selected_user.username === user.username ?
-                                    "no-gutters account-element selected-account"
-                                    :
-                                    "no-gutters account-element"
-                            }
-                                 key={key}
-                                 onClick={() => this.select_merchant_user(user.username, key)}>
-
+                            <Row className={this.state.selected_user.username === user.username ?
+                                    "no-gutters account-element selected-account" :
+                                    "no-gutters account-element"}
+                                 key={key} onClick={() => this.select_merchant_user(user.username, key)}>
                                 <Col>
-                                    <Image
-                                        width={50}
-                                        height={50}
-                                        src={avatar}
-                                        roundedCircle
-                                        className="border border-white grey-back"/>
+                                    <Image width={50} height={50} src={avatar} roundedCircle className="border border-white grey-back"/>
                                 </Col>
-
                                 <Col>
                                     <h2>{user.username}</h2>
                                 </Col>
 
                                 {user.status == 0 ?
-                                    <button
-                                        className="merchant-mini-buttons"
+                                    <button className="merchant-mini-buttons"
                                         onClick={(e) => this.remove_account(e, user.username, key)}>
                                         Remove
                                     </button>
@@ -4220,16 +4256,26 @@ class WalletHome extends React.Component {
                                                 </Col>
                                             </Row>
                                             <Row>
-                                                <Col md={4}>
+
+                                                <Col md={3}>
+                                                    <Form.Check
+                                                        label="active"
+                                                        checked={this.state.active_offer_switch}
+                                                        onChange={this.change_active_switch}
+                                                        type="switch"
+                                                        id="active-offer-switch"
+                                                        name="active-offer-switch"/>
+                                                </Col>
+                                                <Col md={3}>
                                                     <Form.Label>Username</Form.Label>
                                                     <Form.Control disabled name="username" value={selected.username}/>
                                                 </Col>
-                                                <Col md={4}>
+                                                <Col md={3}>
                                                     <button type="submit">
                                                         List Offer
                                                     </button>
                                                 </Col>
-                                                <Col md={4}>
+                                                <Col md={3}>
                                                     <Form.Label>
                                                         Mixins
                                                         <IconContext.Provider value={{color: 'black', size: '5px'}}>
@@ -4448,6 +4494,186 @@ class WalletHome extends React.Component {
                                         }}>
                                         <h1>Edit Offer {this.state.show_edit_offer.title}</h1>
 
+
+                                        <Form id="edit_offer" onSubmit={(e) => this.make_edit_offer(e, this.state.show_edit_offer)}>
+                                            <Row className="no-gutters justify-content-between w-100">
+                                                <Col md="8">
+                                                    <Form.Label>Offer ID</Form.Label>
+
+                                                    <Form.Control
+                                                        disabled
+                                                        name="offerid"
+                                                        value={this.state.show_edit_offer.offerID}
+                                                    />
+                                                    <Form.Group md="6" as={Col}>
+                                                        <Form.Label>Main Image URL</Form.Label>
+
+                                                        <Form.Control
+                                                            name="main_image"
+                                                                      defaultValue={this.state.show_edit_offer_data.main_image}
+                                                                      onChange={this.handleChange}
+                                                        />
+                                                    </Form.Group>
+                                                    <Form.Group md="6" as={Col}>
+                                                        <Form.Label>Image 2</Form.Label>
+
+                                                        <Form.Control
+                                                            name="image_2"
+                                                            defaultValue={this.state.show_edit_offer_data.image_2}
+                                                            onChange={this.handleChange}
+                                                        />
+                                                    </Form.Group>
+                                                    <Form.Group md="6" as={Col}>
+                                                        <Form.Label>Image 3</Form.Label>
+
+                                                        <Form.Control
+                                                            name="image_3"
+                                                            defaultValue={this.state.show_edit_offer_data.image_3}
+                                                            onChange={this.handleChange}
+                                                        />
+                                                    </Form.Group>
+                                                    <Form.Group md="6" as={Col}>
+                                                        <Form.Label>Image 4</Form.Label>
+
+                                                        <Form.Control
+                                                            name="image_4"
+                                                            defaultValue={this.state.show_edit_offer_data.image_4}
+                                                            onChange={this.handleChange}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md="4">
+                                                    <Image className="border border-white grey-back" width={150}
+                                                           height={150} src={this.state.new_offer_image ? this.state.new_offer_image : this.state.show_edit_offer_data.main_image}
+                                                           roundedCircle/>
+                                                </Col>
+                                            </Row>
+                                            <Row className="no-gutters justify-content-between w-100">
+                                                <Form.Group md="12" as={Col}>
+                                                    <Form.Label>Title (max 80 characters) {this.state.title_chars} /
+                                                        80</Form.Label>
+
+                                                    <Form.Control name="title" defaultValue={this.state.show_edit_offer.title}
+                                                                  onChange={this.title_chars_change} />
+                                                </Form.Group>
+                                            </Row>
+                                            <Row className="no-gutters justify-content-between w-100">
+                                                <Form.Group md="12" as={Col}>
+                                                    <Form.Label>Description</Form.Label>
+                                                    <Form.Control maxLength="2000" as="textarea" name="description" defaultValue={this.state.show_edit_offer_data.description} />
+                                                </Form.Group>
+                                            </Row>
+                                            <Row className="w-100">
+                                                <Col sm={4}>
+                                                    <Form.Label>Available Quantity</Form.Label>
+                                                    <Form.Control name="quantity" defaultValue={this.state.show_edit_offer.quantity} />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>SKU</Form.Label>
+                                                    <Form.Control name="sku" defaultValue={this.state.show_edit_offer_data.sku} />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>(ISBN, UPC, GTIN, ASIN, etc)</Form.Label>
+                                                    <Form.Control name="barcode" defaultValue={this.state.show_edit_offer_data.barcode} />
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col sm={2}>
+                                                    <Form.Label>Price (SFX)</Form.Label>
+                                                    <Form.Control name="price" defaultValue={this.state.show_edit_offer.price / 10000000000} />
+                                                </Col>
+                                                <Col sm={2}>
+                                                    <Form.Label>Min Price (SFX)</Form.Label>
+                                                    <Form.Control name="min_sfx_price" defaultValue={this.state.show_edit_offer.minSfxPrice / 10000000000} />
+                                                </Col>
+                                                <Col sm={4}>
+                                                    <Form.Label>Price Oracle</Form.Label>
+                                                    <select name="selected_price_oracle">
+                                                        {edit_price_oracles_drop}
+                                                    </select>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={3}>
+                                                    <Form.Label>Country of Origin</Form.Label>
+                                                    <Form.Control name="country" placedholder="your location"/>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Check
+                                                        label="Shipping"
+                                                        checked={this.state.shipping_switch}
+                                                        onChange={this.change_shipping_switch}
+                                                        type="switch"
+                                                        id="shipping-switch"
+                                                        name="shipping"/>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Check
+                                                        label="NFT"
+                                                        checked={this.state.nft_switch}
+                                                        onChange={this.change_nft_switch}
+                                                        type="switch"
+                                                        id="nft-switch"
+                                                        name="nft"/>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                <Col md={3}>
+                                                    <Form.Check
+                                                        label="active"
+                                                        checked={this.state.active_offer_switch}
+                                                        onChange={this.change_active_switch}
+                                                        type="switch"
+                                                        id="active-offer-switch"
+                                                        name="active-offer-switch"/>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Label>Username</Form.Label>
+                                                    <Form.Control disabled name="username" value={selected.username}/>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <button type="submit">
+                                                        Edit Offer
+                                                    </button>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Label>
+                                                        Mixins
+                                                        <IconContext.Provider value={{color: 'black', size: '5px'}}>
+                                                            <FaInfoCircle data-tip data-for='apiInfo'
+                                                                          className="mx-4 white-text"/>
+
+                                                            <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                                                <span>
+                                                                    Mixins are transactions that have also been sent on the Safex blockchain. <br/>
+                                                                    They are combined with yours for private transactions.<br/>
+                                                                    Changing this from the default could hurt your privacy.<br/>
+                                                                </span>
+                                                            </ReactTooltip>
+                                                        </IconContext.Provider>
+                                                    </Form.Label>
+
+                                                    <Form.Control name="mixins" as="select" defaultValue="7">
+                                                        <option>1</option>
+                                                        <option>2</option>
+                                                        <option>3</option>
+                                                        <option>4</option>
+                                                        <option>5</option>
+                                                        <option>6</option>
+                                                        <option>7</option>
+                                                    </Form.Control>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+
+
+
+
+
+
+
+
+{/*
                                         <Form id="edit_offer"
                                               onSubmit={(e) => this.make_edit_offer(e, this.state.show_edit_offer)}>
                                             <Form.Row>
@@ -4647,7 +4873,7 @@ class WalletHome extends React.Component {
                                             <button type="submit">
                                                 Submit Edit
                                             </button>
-                                        </Form>
+                                        </Form>*/}
                                         <button className="close-button my-5" onClick={this.handleCloseEditOfferForm}>
                                             Close
                                         </button>
