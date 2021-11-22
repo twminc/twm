@@ -4,6 +4,9 @@ import {Row, Col, Container, Button, Form, Image} from 'react-bootstrap';
 
 import {withRouter} from 'react-router-dom';
 
+import {countryOptions} from '../../utils/countries';
+import {CountryDropdown, RegionDropdown, CountryRegionData} from 'react-country-region-selector';
+
 import History from './History';
 
 import {normalize_8decimals} from '../../utils/wallet_creation';
@@ -23,6 +26,7 @@ import {
 
 import keccak256 from 'keccak256';
 
+import {default as ReactSelect} from "react-select";
 
 import {
     get_staked_tokens,
@@ -58,6 +62,7 @@ import MerchantAccounts from '../customComponents/MerchantAccounts';
 import MerchantTabs from '../customComponents/MerchantTabs';
 import MerchantOffers from '../customComponents/MerchantOffers';
 import MyOrders from '../customComponents/MyOrders';
+import CountrySelector from '../customComponents/CountrySelector';
 
 import {
     open_twm_file,
@@ -173,7 +178,8 @@ class WalletHome extends React.Component {
             token_stakes: [],
             title_chars: 0,
             price_oracles_list: [],
-            quantity_input: 1
+            quantity_input: 1,
+            countriesSelected: null
         };
     }
 
@@ -959,7 +965,7 @@ class WalletHome extends React.Component {
             let p_oracles = await get_price_oracles(r_obj);
             console.log(p_oracles);
             this.setState({price_oracles_list: p_oracles.price_pegs});
-        } catch(err) {
+        } catch (err) {
             console.error(err);
         }
     };
@@ -1087,7 +1093,8 @@ class WalletHome extends React.Component {
                 show_new_offer_form: true,
                 nft_switch: false,
                 shipping_switch: true,
-                open_message_switch: false
+                open_message_switch: false,
+                countriesSelected: null
             });
         } else if (!this.state.user_registered) {
             alert(`user must be successfully approved and registered to use this feature`);
@@ -1102,7 +1109,22 @@ class WalletHome extends React.Component {
     //show modal of Purchase Form
     handleShowPurchaseForm = (listing, data, order_obj) => {
         //here we need to fetch the pub keys of the seller.
-        this.setState({quantity_input: 1, show_purchase_form: true, show_purchase_offer: listing, show_purchase_offer_data: data, show_purchase_order_obj: order_obj});
+        let country_array = [];
+        console.log(data);
+        console.log(data.country);
+        if (data.country) {
+            country_array = data.country.split(',');
+            console.log(country_array);
+        }
+        this.setState({
+            quantity_input: 1,
+            show_purchase_form: true,
+            show_purchase_offer: listing,
+            show_purchase_offer_data: data,
+            show_purchase_order_obj: order_obj,
+            purchase_country_array: country_array,
+            purchase_country: country_array.length > 0 ? country_array[0] : ''
+        });
     };
 
     // Show order confirmed modal
@@ -1267,30 +1289,51 @@ class WalletHome extends React.Component {
 
         let o_obj = {};
         o_obj.twm_version = 1;
+        let des_length = 0;
 
         if (vees.description.value.length > 0) {
             o_obj.description = vees.description.value;
+            des_length += vees.description.value.length;
         }
         if (vees.main_image.value.length > 0) {
             o_obj.main_image = vees.main_image.value;
+            des_length += vees.main_image.value.length;
         }
         if (vees.image_2.value.length > 0) {
             o_obj.image_2 = vees.image_2.value;
+            des_length += vees.image_2.value.length;
         }
         if (vees.image_3.value.length > 0) {
             o_obj.image_3 = vees.image_3.value;
+            des_length += vees.image_3.value.length;
         }
         if (vees.image_4.value.length > 0) {
             o_obj.image_4 = vees.image_4.value;
+            des_length += vees.image_4.value.length;
         }
         if (vees.sku.value.length > 0) {
             o_obj.sku = vees.sku.value;
+            des_length += vees.sku.value.length;
         }
         if (vees.barcode.value.length > 0) {
             o_obj.barcode = vees.barcode.value;
+            des_length += vees.barcode.value.length;
         }
-        if (vees.country.value.length > 0) {
-            o_obj.country = vees.country.value;
+
+        let country_array = [];
+        let country_string = '';
+        if (this.state.countriesSelected.length > 0) {
+            for (const country in this.state.countriesSelected) {
+                country_string += `${this.state.countriesSelected[country].value},`
+                console.log(country);
+                country_array.push(this.state.countriesSelected[country].value);
+            }
+            country_string.substring(0, country_string.length - 1);
+            des_length += country_string.length;
+            o_obj.country = country_string;
+        }
+        if (des_length > 2000) {
+            alert(`description elements are greater in total than is allowed`);
         }
 
         let the_peg = {};
@@ -2163,6 +2206,7 @@ class WalletHome extends React.Component {
                 //console.log(t_f.api.urls[this.state.api_url][this.state.buyerSelectOffer][this.state.buyerSelectOrder].messages[msg]);
                 try {
                     let t_msg = core.messages[msg];
+                    console.log(t_msg);
                     if (typeof t_msg.message == 'string') {
                         t_msg.message = JSON.parse(t_msg.message);
                     }
@@ -2232,6 +2276,10 @@ class WalletHome extends React.Component {
                                                 <div>
                                                     <label>Street Address:</label>
                                                     <span className="ml-2">{parsed_so.a1}</span>
+                                                </div>
+                                                <div>
+                                                    <label>Street Address 2:</label>
+                                                    <span className="ml-2">{parsed_so.a2}</span>
                                                 </div>
                                                 <div class="d-flex">
                                                     <label>City:</label>
@@ -2751,6 +2799,10 @@ class WalletHome extends React.Component {
                 if (total_cost > this.state.cash) {
                     alert_text += ` not enough SFX available for this purchase: total cost: ${total_cost} SFX, your balance: ${this.state.cash.toLocaleString()} SFX`;
                     alert_bool = true;
+                }
+                if (this.state.purchase_country == '') {
+                    alert_bool = true;
+                    alert_text += ` country must be selected`;
                 }
 
                 if (alert_bool) {
@@ -3315,6 +3367,12 @@ class WalletHome extends React.Component {
         }
     };
 
+    handleCountryChange = (selected) => {
+        this.setState({
+            countriesSelected: selected
+        });
+    };
+
     handleChangeQuantity = (e) => {
         e.preventDefault();
         if (e.target.value > 0 && e.target.value <= this.state.show_purchase_offer.quantity) {
@@ -3335,6 +3393,17 @@ class WalletHome extends React.Component {
         })
     };
 
+    setPurchaseState = (e) => {
+        e.preventDefault();
+        console.log(e.target.value);
+        this.setState({purchase_state: e.target.value});
+    };
+
+    setPurchaseCountry = (e) => {
+        e.preventDefault();
+        this.setState({purchase_country: e.target.value});
+    };
+
     renderAddressComponent = () => {
         return (<AccountInfo
             password={this.state.password}
@@ -3350,18 +3419,6 @@ class WalletHome extends React.Component {
     }
 
     render() {
-        var message_render;
-
-        try {
-            message_render = this.state.messages_selected.map((msg, key) => {
-
-            });
-        } catch (err) {
-            console.error(err);
-        }
-
-        console.log(message_render);
-
         const twmwallet = () => {
             switch (this.state.interface_view) {
                 case "home": {
@@ -3411,7 +3468,6 @@ class WalletHome extends React.Component {
                             od_obj.price_info = <span></span>;
                             od_obj.oracl_rate = 0;
 
-
                             let fiat_price_sfx = 0;
                             let fiat_bool = false;
                             let oracl_curr = '';
@@ -3427,17 +3483,26 @@ class WalletHome extends React.Component {
                                         oracl_curr = oracl.currency;
                                         od_obj.min_price = listing.price;
                                         od_obj.oracl_rate = (1 / (oracl.rate / 10000000000));
-                                        od_obj.fiat_price_sfx = listing.price /  (1 / (oracl.rate / 10000000000));
-                                        fiat_price_sfx = listing.price /  (1 / (oracl.rate / 10000000000));
-                                        price_row = <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px" src={sfxLogo}/></li>;
-                                        od_obj.price_info = <span>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px" src={sfxLogo}/></span>;
+                                        od_obj.fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
+                                        fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
+                                        price_row =
+                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px"
+                                                                                                     src={sfxLogo}/>
+                                            </li>;
+                                        od_obj.price_info =
+                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px"
+                                                                                                       src={sfxLogo}/></span>;
                                         console.log(listing.title);
                                         console.log(fiat_price_sfx);
                                         console.log(listing.min_price);
                                         if (od_obj.fiat_price_sfx < listing.min_price) {
                                             min_fiat = listing.min_price * (1 / (oracl.rate / 10000000000));
-                                            price_row = <li>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img width="14px" src={sfxLogo}/></li>;
-                                            od_obj.price_info = <span>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img width="14px" src={sfxLogo}/></span>;
+                                            price_row =
+                                                <li>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img
+                                                    width="14px" src={sfxLogo}/></li>;
+                                            od_obj.price_info =
+                                                <span>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img
+                                                    width="14px" src={sfxLogo}/></span>;
                                             od_obj.fiat_price_sfx = listing.min_price;
                                             od_obj.min_price = min_fiat;
                                         }
@@ -3458,9 +3523,9 @@ class WalletHome extends React.Component {
                                 data.image_3 = listing.image_3;
                                 data.image_4 = listing.image_4;
                                 data.sku = '';
-                                data.barcode = '';
+                                data.barcode = listing.barcode;
                                 data.weight = '';
-                                data.country = '';
+                                data.country = listing.country;
                                 data.shipping = listing.shipping;
                                 data.nft = listing.nft;
                                 data.open_message = listing.open_message;
@@ -3548,6 +3613,7 @@ class WalletHome extends React.Component {
                     return (
                         <div className="">
                             <ReactModal
+                                ariaHideApp={false}
                                 isOpen={this.state.show_purchase_form}
                                 closeTimeoutMS={500}
                                 className="keys-modal"
@@ -3595,29 +3661,53 @@ class WalletHome extends React.Component {
                                                         </Col>
 
                                                     </Row>
-                                                    <label>Address Line 1:</label>
-                                                    <Form.Control required name="address1"/>
+                                                    <Row>
+                                                        <label>Address Line 1:</label>
+                                                        <Form.Control required name="address1"/>
+                                                    </Row>
+                                                    <Row>
+                                                        <label>Address Line 2:</label>
+                                                        <Form.Control name="address2"/>
+                                                    </Row>
+                                                    <Row>
+                                                        <label>City:</label>
+                                                        <Form.Control required name="city"/>
+                                                    </Row>
+                                                    <Row style={{width: '100%'}}>
+                                                        {this.state.purchase_country == 'US' ? (
+                                                                <div><label>State/Country:</label>
+                                                                    <RegionDropdown country={this.state.purchase_country}
+                                                                                    value={this.state.purchase_state}
+                                                                                    countryValueType={'short'}
+                                                                                    name="state"
+                                                                                    onChange={(e, val) => this.setPurchaseState(val)}/>
+                                                                </div>) :
+                                                            (<div><label>State/Region:</label>
+                                                                <Form.Control required name="state"/></div>)
+                                                        }
+                                                    </Row>
+                                                    <Row>
+                                                        <label>Zip/Area code:</label>
+                                                        <Form.Control required name="zipcode"/>
+                                                    </Row>
+                                                    <Row>
 
-                                                    <label>Address Line 2:</label>
-                                                    <Form.Control name="address2"/>
-
-                                                    <label>City:</label>
-                                                    <Form.Control required name="city"/>
-
-                                                    <label>State/Country:</label>
-                                                    <Form.Control required name="state"/>
-
-                                                    <label>Zip/Area code:</label>
-                                                    <Form.Control required name="zipcode"/>
-
-                                                    <label>Country:</label>
-                                                    <Form.Control name="country"/>
-
-                                                    <label>Email:</label>
-                                                    <Form.Control type="email" name="email_address"/>
-
-                                                    <label>Phone:</label>
-                                                    <Form.Control name="phone_number"/>
+                                                        <label>Country:</label>
+                                                        <CountryDropdown
+                                                            name="country"
+                                                            value={this.state.purchase_country}
+                                                            whitelist={this.state.purchase_country_array}
+                                                            valueType={'short'}
+                                                            onChange={(e, val) => this.setPurchaseCountry(val)}/>
+                                                    </Row>
+                                                    <Row>
+                                                        <label>Email:</label>
+                                                        <Form.Control type="email" name="email_address"/>
+                                                    </Row>
+                                                    <Row>
+                                                        <label>Phone:</label>
+                                                        <Form.Control name="phone_number"/>
+                                                    </Row>
                                                 </div>
                                                 }
 
@@ -3756,7 +3846,6 @@ class WalletHome extends React.Component {
                                                             id="quantity"
                                                             name="quantity"
                                                             type="number"
-                                                            defaultValue={1}
                                                             onChange={this.handleChangeQuantity}
                                                             max={this.state.show_purchase_offer.quantity}
                                                             min={1}
@@ -3784,13 +3873,15 @@ class WalletHome extends React.Component {
                                                             (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(6)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
                                                             ''}
                                                         {this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)} SFX</span>
-                                                            <img className="ml-2" width="20px" className="ml-2" src={sfxLogo}/>
+                                                            <img className="ml-2" width="20px" className="ml-2"
+                                                                 src={sfxLogo}/>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {this.state.showLoader ?
-                                                    <Loader className="justify-content-center align-content-center" type="Bars" color="#00BFFF" height={50} width={50}/>
+                                                    <Loader className="justify-content-center align-content-center"
+                                                            type="Bars" color="#00BFFF" height={50} width={50}/>
                                                     : <button className="mt-3"> Buy </button>
                                                 }
                                             </div>
@@ -3961,8 +4052,8 @@ class WalletHome extends React.Component {
                                             <div style={{width: '160px'}}>
                                                 <button style={{fontSize: '1.5rem'}} className="search-button"
                                                         type="button"
-                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id)}>Show
-                                                    Messages
+                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id)}>
+                                                    Show Messages
                                                 </button>
                                             </div>
                                         </div>)}
@@ -3975,7 +4066,9 @@ class WalletHome extends React.Component {
                                         refreshFn={() => this.load_buyers_messages_for_selected_order(this.state.buyerSelectOffer, this.state.buyerSelectOrder)}
                                         messages={this.renderBuyerMessages()}
                                         orderId={this.state.buyerSelectOrder}
-                                        offerId={this.state.buyerSelectOffer}/>
+                                        offerId={this.state.buyerSelectOffer}
+
+                                    />
                                 </div>
                                 :
                                 <div style={{
@@ -3997,22 +4090,22 @@ class WalletHome extends React.Component {
 
                 case "merchant": {
                     //drop down of price oracles, selected by oracle id
-                     console.log(this.state.show_edit_offer);
+                    console.log(this.state.show_edit_offer);
 
-                     /*
-                        active: true
-                        currency: "USD"
-                        description: "{"twm_version":1,"shipping":true,"nft":false,"open_message":false}"
-                        description_obj: {twm_version: 1, shipping: true, nft: false, open_message: false}
-                        minSfxPrice: "10000000000000"
-                        offerID: "d7c406f2546dbb698d117a49202cea4e03bd015ea4709e34e0a8183e33139cc6"
-                        price: "500000000000"
-                        pricePegID: "a44cf3986a61c54845e1188239242fd645ca5127f72554bed29fbcb64834b49f"
-                        pricePegUsed: true
-                        quantity: "0"
-                        seller: "xps"
-                        title: "testctrl2"
-                      */
+                    /*
+                       active: true
+                       currency: "USD"
+                       description: "{"twm_version":1,"shipping":true,"nft":false,"open_message":false}"
+                       description_obj: {twm_version: 1, shipping: true, nft: false, open_message: false}
+                       minSfxPrice: "10000000000000"
+                       offerID: "d7c406f2546dbb698d117a49202cea4e03bd015ea4709e34e0a8183e33139cc6"
+                       price: "500000000000"
+                       pricePegID: "a44cf3986a61c54845e1188239242fd645ca5127f72554bed29fbcb64834b49f"
+                       pricePegUsed: true
+                       quantity: "0"
+                       seller: "xps"
+                       title: "testctrl2"
+                     */
 
                     var selected_peg_key = 0;
                     if (this.state.show_edit_offer.pricePegUsed === true) {
@@ -4075,11 +4168,12 @@ class WalletHome extends React.Component {
                         }
                         return (
                             <Row className={this.state.selected_user.username === user.username ?
-                                    "no-gutters account-element selected-account" :
-                                    "no-gutters account-element"}
+                                "no-gutters account-element selected-account" :
+                                "no-gutters account-element"}
                                  key={key} onClick={() => this.select_merchant_user(user.username, key)}>
                                 <Col>
-                                    <Image width={50} height={50} src={avatar} roundedCircle className="border border-white grey-back"/>
+                                    <Image width={50} height={50} src={avatar} roundedCircle
+                                           className="border border-white grey-back"/>
                                 </Col>
                                 <Col>
                                     <h2>{user.username}</h2>
@@ -4087,7 +4181,7 @@ class WalletHome extends React.Component {
 
                                 {user.status == 0 ?
                                     <button className="merchant-mini-buttons"
-                                        onClick={(e) => this.remove_account(e, user.username, key)}>
+                                            onClick={(e) => this.remove_account(e, user.username, key)}>
                                         Remove
                                     </button>
                                     :
@@ -4256,55 +4350,77 @@ class WalletHome extends React.Component {
                                                 </Col>
                                             </Row>
                                             <Row className="no-gutters justify-content-between w-100">
-                                                <Form.Group md="12" as={Col}>
+                                                <Col>
                                                     <Form.Label>Title (max 80 characters) {this.state.title_chars} /
                                                         80</Form.Label>
 
-                                                    <Form.Control name="title" onChange={this.title_chars_change} />
-                                                </Form.Group>
+                                                    <Form.Control name="title" onChange={this.title_chars_change}/>
+                                                </Col>
                                             </Row>
                                             <Row className="no-gutters justify-content-between w-100">
                                                 <Form.Group md="12" as={Col}>
                                                     <Form.Label>Description</Form.Label>
-                                                    <Form.Control maxLength="2000" as="textarea" name="description" />
+                                                    <Form.Control maxLength="2000" as="textarea" name="description"/>
                                                 </Form.Group>
                                             </Row>
                                             <Row className="w-100">
                                                 <Col sm={4}>
                                                     <Form.Label>Available Quantity</Form.Label>
-                                                    <Form.Control name="quantity" defaultValue={1} />
+                                                    <Form.Control name="quantity" defaultValue={1}/>
                                                 </Col>
                                                 <Col sm={4}>
                                                     <Form.Label>SKU</Form.Label>
-                                                    <Form.Control name="sku" />
+                                                    <Form.Control name="sku"/>
                                                 </Col>
                                                 <Col sm={4}>
                                                     <Form.Label>(ISBN, UPC, GTIN, ASIN, etc)</Form.Label>
-                                                    <Form.Control name="barcode" />
+                                                    <Form.Control name="barcode"/>
                                                 </Col>
                                             </Row>
-                                            <Row>
-                                                <Col sm={2}>
-                                                    <Form.Label>Price (SFX)</Form.Label>
-                                                    <Form.Control name="price" defaultValue={1} />
+                                            <Row className="w-100" style={{padding: '5px'}}>
+                                                <Col sm={3}>
+                                                    <Form.Label>Price (SFX|Fiat)
+                                                        <IconContext.Provider value={{color: 'black', size: '10px'}}>
+                                                            <FaInfoCircle style={{color: 'black', size: '10px'}}
+                                                                          data-tip data-for='oracle-price'/>
+
+                                                            <ReactTooltip id='oracle-price' type='info' effect='solid'>
+                                                                <span>
+                                                                    Input the price in Fiat IF the oracle
+                                                                    is chosen. Choose `none` if listing in SFX<br/>
+                                                                </span>
+                                                            </ReactTooltip>
+                                                        </IconContext.Provider></Form.Label>
+                                                    <Form.Control name="price" defaultValue={1}/>
                                                 </Col>
-                                                <Col sm={2}>
+                                                <Col sm={3}>
                                                     <Form.Label>Min Price (SFX)</Form.Label>
-                                                    <Form.Control name="min_sfx_price" defaultValue={1} />
+                                                    <Form.Control name="min_sfx_price" defaultValue={1}/>
                                                 </Col>
-                                                <Col sm={4}>
+                                                <Col sm={6}>
                                                     <Form.Label>Price Oracle</Form.Label>
-                                                    <select name="selected_price_oracle">
+                                                    <select style={{width: '100%'}} name="selected_price_oracle">
                                                         {price_oracles_drop}
                                                     </select>
                                                 </Col>
                                             </Row>
-                                            <Row>
-                                                <Col md={3}>
-                                                    <Form.Label>Country of Origin</Form.Label>
-                                                    <Form.Control name="country" placedholder="your location"/>
+                                            <Row className="w-100" style={{padding: '5px'}}>
+                                                <Col sm={6}>
+                                                    <Form.Label>Shipping Destinations</Form.Label>
+                                                    <ReactSelect
+                                                        maxMenuHeight={120}
+                                                        options={countryOptions}
+                                                        isMulti
+                                                        closeMenuOnSelect={false}
+                                                        hideSelectedOptions={false}
+                                                        components={{CountrySelector}}
+                                                        onChange={this.handleCountryChange}
+                                                        allowSelectAll={true}
+                                                        value={this.state.countriesSelected}
+                                                    />
                                                 </Col>
-                                                <Col md={3}>
+                                                <Col sm={3}>
+                                                    <Form.Label>Listing Type</Form.Label>
                                                     <Form.Check
                                                         label="Shipping"
                                                         checked={this.state.shipping_switch}
@@ -4312,8 +4428,6 @@ class WalletHome extends React.Component {
                                                         type="switch"
                                                         id="shipping-switch"
                                                         name="shipping"/>
-                                                </Col>
-                                                <Col md={3}>
                                                     <Form.Check
                                                         label="NFT"
                                                         checked={this.state.nft_switch}
@@ -4322,10 +4436,8 @@ class WalletHome extends React.Component {
                                                         id="nft-switch"
                                                         name="nft"/>
                                                 </Col>
-                                            </Row>
-                                            <Row>
-
                                                 <Col md={3}>
+                                                    <Form.Label>Set Active</Form.Label>
                                                     <Form.Check
                                                         label="active"
                                                         checked={this.state.active_offer_switch}
@@ -4334,6 +4446,8 @@ class WalletHome extends React.Component {
                                                         id="active-offer-switch"
                                                         name="active-offer-switch"/>
                                                 </Col>
+                                            </Row>
+                                            <Row>
                                                 <Col md={3}>
                                                     <Form.Label>Username</Form.Label>
                                                     <Form.Control disabled name="username" value={selected.username}/>
@@ -4346,9 +4460,8 @@ class WalletHome extends React.Component {
                                                 <Col md={3}>
                                                     <Form.Label>
                                                         Mixins
-                                                        <IconContext.Provider value={{color: 'black', size: '5px'}}>
-                                                            <FaInfoCircle data-tip data-for='apiInfo'
-                                                                          className="mx-4 white-text"/>
+                                                        <IconContext.Provider value={{color: 'black', size: '10px'}}>
+                                                            <FaInfoCircle data-tip data-for='apiInfo'/>
 
                                                             <ReactTooltip id='apiInfo' type='info' effect='solid'>
                                                                 <span>
@@ -4370,12 +4483,15 @@ class WalletHome extends React.Component {
                                                         <option>7</option>
                                                     </Form.Control>
                                                 </Col>
+                                                <Col sm={3}>
+                                                    <Button className="close-button"
+                                                            onClick={this.handleCloseNewOfferForm}>
+                                                        Close
+                                                    </Button>
+                                                </Col>
                                             </Row>
                                         </Form>
 
-                                        <Button className="close-button" onClick={this.handleCloseNewOfferForm}>
-                                            Close
-                                        </Button>
                                     </ReactModal>
 
                                     <ReactModal
@@ -4563,7 +4679,8 @@ class WalletHome extends React.Component {
                                         <h1>Edit Offer {this.state.show_edit_offer.title}</h1>
 
 
-                                        <Form id="edit_offer" onSubmit={(e) => this.make_edit_offer(e, this.state.show_edit_offer)}>
+                                        <Form id="edit_offer"
+                                              onSubmit={(e) => this.make_edit_offer(e, this.state.show_edit_offer)}>
                                             <Row className="no-gutters justify-content-between w-100">
                                                 <Col md="8">
                                                     <Form.Label>Offer ID</Form.Label>
@@ -4578,8 +4695,8 @@ class WalletHome extends React.Component {
 
                                                         <Form.Control
                                                             name="main_image"
-                                                                      defaultValue={this.state.show_edit_offer_data.main_image}
-                                                                      onChange={this.handleChange}
+                                                            defaultValue={this.state.show_edit_offer_data.main_image}
+                                                            onChange={this.handleChange}
                                                         />
                                                     </Form.Group>
                                                     <Form.Group md="6" as={Col}>
@@ -4612,7 +4729,8 @@ class WalletHome extends React.Component {
                                                 </Col>
                                                 <Col md="4">
                                                     <Image className="border border-white grey-back" width={150}
-                                                           height={150} src={this.state.new_offer_image ? this.state.new_offer_image : this.state.show_edit_offer_data.main_image}
+                                                           height={150}
+                                                           src={this.state.new_offer_image ? this.state.new_offer_image : this.state.show_edit_offer_data.main_image}
                                                            roundedCircle/>
                                                 </Col>
                                             </Row>
@@ -4621,38 +4739,45 @@ class WalletHome extends React.Component {
                                                     <Form.Label>Title (max 80 characters) {this.state.title_chars} /
                                                         80</Form.Label>
 
-                                                    <Form.Control name="title" defaultValue={this.state.show_edit_offer.title}
-                                                                  onChange={this.title_chars_change} />
+                                                    <Form.Control name="title"
+                                                                  defaultValue={this.state.show_edit_offer.title}
+                                                                  onChange={this.title_chars_change}/>
                                                 </Form.Group>
                                             </Row>
                                             <Row className="no-gutters justify-content-between w-100">
                                                 <Form.Group md="12" as={Col}>
                                                     <Form.Label>Description</Form.Label>
-                                                    <Form.Control maxLength="2000" as="textarea" name="description" defaultValue={this.state.show_edit_offer_data.description} />
+                                                    <Form.Control maxLength="2000" as="textarea" name="description"
+                                                                  defaultValue={this.state.show_edit_offer_data.description}/>
                                                 </Form.Group>
                                             </Row>
                                             <Row className="w-100">
                                                 <Col sm={4}>
                                                     <Form.Label>Available Quantity</Form.Label>
-                                                    <Form.Control name="quantity" defaultValue={this.state.show_edit_offer.quantity} />
+                                                    <Form.Control name="quantity"
+                                                                  defaultValue={this.state.show_edit_offer.quantity}/>
                                                 </Col>
                                                 <Col sm={4}>
                                                     <Form.Label>SKU</Form.Label>
-                                                    <Form.Control name="sku" defaultValue={this.state.show_edit_offer_data.sku} />
+                                                    <Form.Control name="sku"
+                                                                  defaultValue={this.state.show_edit_offer_data.sku}/>
                                                 </Col>
                                                 <Col sm={4}>
                                                     <Form.Label>(ISBN, UPC, GTIN, ASIN, etc)</Form.Label>
-                                                    <Form.Control name="barcode" defaultValue={this.state.show_edit_offer_data.barcode} />
+                                                    <Form.Control name="barcode"
+                                                                  defaultValue={this.state.show_edit_offer_data.barcode}/>
                                                 </Col>
                                             </Row>
                                             <Row>
                                                 <Col sm={2}>
                                                     <Form.Label>Price (SFX)</Form.Label>
-                                                    <Form.Control name="price" defaultValue={this.state.show_edit_offer.price / 10000000000} />
+                                                    <Form.Control name="price"
+                                                                  defaultValue={this.state.show_edit_offer.price / 10000000000}/>
                                                 </Col>
                                                 <Col sm={2}>
                                                     <Form.Label>Min Price (SFX)</Form.Label>
-                                                    <Form.Control name="min_sfx_price" defaultValue={this.state.show_edit_offer.minSfxPrice / 10000000000} />
+                                                    <Form.Control name="min_sfx_price"
+                                                                  defaultValue={this.state.show_edit_offer.minSfxPrice / 10000000000}/>
                                                 </Col>
                                                 <Col sm={4}>
                                                     <Form.Label>Price Oracle</Form.Label>
@@ -4735,13 +4860,7 @@ class WalletHome extends React.Component {
                                         </Form>
 
 
-
-
-
-
-
-
-{/*
+                                        {/*
                                         <Form id="edit_offer"
                                               onSubmit={(e) => this.make_edit_offer(e, this.state.show_edit_offer)}>
                                             <Form.Row>
