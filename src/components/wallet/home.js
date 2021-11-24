@@ -3630,7 +3630,7 @@ class WalletHome extends React.Component {
                                     },
                                     content: {
                                         position: 'absolute',
-                                        top: '20%',
+                                        top: '5%',
                                         left: '12%',
                                     }
                                 }}>
@@ -3855,35 +3855,31 @@ class WalletHome extends React.Component {
                                                     </div>
                                                 </div>
 
-                                                <div className="d-flex mt-3">
-                                                    <div className="d-flex align-items-center">
-                                                        <label className="mb-0">Price:</label>
-                                                        <div className="d-flex align-items-center">
-                                                    <span
-                                                        className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
-                                                        </div>
-                                                    </div>
+                                                <Row>
+                                                    <Col sm={6}>
+                                                            <label>Price:</label>
+                                                    <span className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
 
-                                                    <div className="d-flex align-items-center ml-3">
-                                                        <label className="mb-0">Total:</label>
-                                                        <div className="d-flex align-items-center">
-                                                    <span
-                                                        className="ml-2">
+                                                        <label>&nbsp;Total:&nbsp;</label>
+                                                    <span>
                                                         {this.state.show_purchase_order_obj.fiat_bool ?
                                                             (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(6)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
                                                             ''}
                                                         {this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)} SFX</span>
-                                                            <img className="ml-2" width="20px" className="ml-2"
-                                                                 src={sfxLogo}/>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                                <img width="20px" className="ml-2"
+                                                                     src={sfxLogo}/>
 
-                                                {this.state.showLoader ?
-                                                    <Loader className="justify-content-center align-content-center"
-                                                            type="Bars" color="#00BFFF" height={50} width={50}/>
-                                                    : <button className="mt-3"> Buy </button>
-                                                }
+                                                        {this.state.showLoader ?
+                                                            <Loader type="Bars" color="#00BFFF" height={50} width={50}/>
+                                                            : <button style={{marginLeft: '5px'}}> Buy </button>
+                                                        }
+                                                    </Col>
+
+
+
+                                                </Row>
+
+
                                             </div>
                                         </Col>
                                     </Form>
