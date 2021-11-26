@@ -3486,11 +3486,11 @@ class WalletHome extends React.Component {
                                         od_obj.fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
                                         fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
                                         price_row =
-                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px"
+                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img width="14px"
                                                                                                      src={sfxLogo}/>
                                             </li>;
                                         od_obj.price_info =
-                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx} <img width="14px"
+                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img width="14px"
                                                                                                        src={sfxLogo}/></span>;
                                         console.log(listing.title);
                                         console.log(fiat_price_sfx);
@@ -3646,7 +3646,7 @@ class WalletHome extends React.Component {
                                           onSubmit={(e) => this.purchase_item(e, this.state.show_purchase_offer)}>
 
                                         <Col md={4}>
-                                            <div>
+                                            <div style={{paddingLeft: '10px'}}>
                                                 {this.state.show_purchase_offer_data.shipping &&
                                                 <div>
                                                     <h2>Shipping Info</h2>
@@ -3745,7 +3745,7 @@ class WalletHome extends React.Component {
                                             </div>
                                         </Col>
                                         <Col md={8}>
-                                            <div>
+                                            <div style={{paddingLeft: '10px'}}>
                                                 <Row>
                                                     {this.state.show_purchase_offer_data.main_image && <Image
                                                         className="product-image pointer"
@@ -3856,16 +3856,16 @@ class WalletHome extends React.Component {
                                                 </div>
 
                                                 <Row>
-                                                    <Col sm={6}>
+                                                    <Col sm={8}>
                                                             <label>Price:</label>
                                                     <span className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
 
                                                         <label>&nbsp;Total:&nbsp;</label>
                                                     <span>
                                                         {this.state.show_purchase_order_obj.fiat_bool ?
-                                                            (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(6)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
+                                                            (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(2)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
                                                             ''}
-                                                        {this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)} SFX</span>
+                                                        {(this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)).toFixed(4)} SFX</span>
                                                                 <img width="20px" className="ml-2"
                                                                      src={sfxLogo}/>
 
@@ -3874,12 +3874,7 @@ class WalletHome extends React.Component {
                                                             : <button style={{marginLeft: '5px'}}> Buy </button>
                                                         }
                                                     </Col>
-
-
-
                                                 </Row>
-
-
                                             </div>
                                         </Col>
                                     </Form>
