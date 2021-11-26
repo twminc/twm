@@ -87,19 +87,36 @@ export default class History extends React.Component {
 
 
             if (the_type == 'your purchase') {
-                return (
-                    <tr className="tx-row" key={key}>
-                        <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
-                        <td>{txn.id}</td>
-                        <td>{txn.direction}</td>
-                        <td>{txn.pending}</td>
-                        <td className="">{the_type}</td>
-                        <td>{(txn.transfers[2].amount / 10000000000) + (txn.transfers[1].amount / 10000000000)} SFX</td>
-                        <td>{txn.fee / 10000000000}</td>
-                        <td>{txn.blockHeight}</td>
-                        <td>{txn.confirmations}</td>
-                    </tr>
-                )
+                if (txn.transfers.length > 0) {
+                    return (
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{(txn.transfers[2].amount / 10000000000) + (txn.transfers[1].amount / 10000000000)} SFX</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+                } else {
+                    return (
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{((txn.amount / 0.95) / 10000000000)} SFX</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+                }
+
             } else {
                 return (
                     <tr className="tx-row" key={key}>

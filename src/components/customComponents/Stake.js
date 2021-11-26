@@ -98,7 +98,7 @@ export default function Stake(props) {
                     {props.tokenStakes.map((staked, key) => {
                         return (
                             <option key={key}>
-                                `${staked.tokenStaked / 10000000000} SFT at height ${staked.blockHeight}`
+                                {staked.tokenStaked / 10000000000} SFT at height {staked.blockHeight}
                             </option>
                         );
                     })}
@@ -126,12 +126,7 @@ export default function Stake(props) {
                     </ReactTooltip>
                 </label>
 
-                <select
-                    className="ml-2"
-                    style={{width: "50px"}}
-                    name="mixins"
-                    defaultValue="7"
-                >
+                <select className="ml-2" style={{width: "50px"}} name="mixins" defaultValue="7">
                     <option>1</option>
                     <option>2</option>
                     <option>3</option>
@@ -143,11 +138,7 @@ export default function Stake(props) {
             </div>
 
             <div className="d-flex w-100" style={{flex: 1, alignItems: "flex-end"}}>
-                <button
-                    style={{height: "50px"}}
-                    className="custom-button-send"
-                    type="submit"
-                >
+                <button style={{height: "50px"}} className="custom-button-send" type="submit">
                     {props.style.toUpperCase()}
                 </button>
             </div>

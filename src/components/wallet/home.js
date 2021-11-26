@@ -1498,12 +1498,12 @@ class WalletHome extends React.Component {
                     if (confirmed) {
                         try {
                             this.setState({stake_txn_amount: e.target.amount.value});
-                            let staked_token = await this.token_stake_async(wallet, e.target.amount.value, mixins);
+                            let staked_token = await this.token_stake_async(wallet, parseInt(e.target.amount.value), mixins);
                             let confirmed_fee = window.confirm(`The network fee to stake ${this.state.stake_txn_amount} SFT will be:  ${staked_token.fee() / 10000000000} SFX (Safex Cash)`);
                             let fee = staked_token.fee();
-                            if (fee > wallet.unlockedBalance()) {
+                            if (parseInt(fee) > parseInt(wallet.unlockedBalance())) {
                                 alert(`you do not have enough SFX (Safex Cash) to complete this transaction
-                                needed ${fee} your available balance is ${wallet.unlockedBalance()}`);
+                                needed ${fee / 10000000000} your available balance is ${wallet.unlockedBalance() / 10000000000}`);
                             } else {
                                 let txid = staked_token.transactionsIds();
                                 this.setState({stake_txn_id: txid, stake_txn_fee: fee});
@@ -1610,9 +1610,9 @@ class WalletHome extends React.Component {
                         let confirmed_fee = window.confirm(`The network fee to unstake ${this.state.unstake_txn_amount} SFT will be:  ${unstaked.fee() / 10000000000} SFX Safex Cash`);
                         let fee = unstaked.fee();
                         let txid = unstaked.transactionsIds();
-                        if (fee > wallet.unlockedBalance()) {
+                        if (parseInt(fee) > parseInt(wallet.unlockedBalance())) {
                             alert(`you do not have enough SFX (Safex Cash) to complete this transaction
-                                needed ${fee} your available balance is ${wallet.unlockedBalance()}`);
+                                needed ${fee / 10000000000} your available balance is ${wallet.unlockedBalance() / 10000000000}`);
                         } else {
                             if (confirmed_fee) {
                                 try {
