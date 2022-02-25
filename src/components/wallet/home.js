@@ -1154,6 +1154,7 @@ class WalletHome extends React.Component {
         let shipping_state = false;
         let open_message_state = false;
         let d_obj = {};
+
         try {
             let p_data = JSON.parse(listing.description);
             console.log(p_data);
@@ -1192,10 +1193,12 @@ class WalletHome extends React.Component {
             if (p_data.weight) {
                 d_obj.weight = p_data.weight;
             }
+            let country_array = [];
             if (p_data.country) {
-                d_obj.country = p_data.country;
+                country_array = p_data.country.split(',');
+                console.log(country_array);
             }
-            this.setState({show_edit_offer_data: p_data})
+            this.setState({show_edit_offer_data: p_data, countriesSelected: country_array})
         } catch (err) {
             console.error(err);
             console.error(`error at the loading of listing data`);
@@ -1322,7 +1325,7 @@ class WalletHome extends React.Component {
 
         let country_array = [];
         let country_string = '';
-        if (this.state.countriesSelected.length > 0) {
+        if (this.state.countriesSelected) {
             for (const country in this.state.countriesSelected) {
                 country_string += `${this.state.countriesSelected[country].value},`
                 console.log(country);
@@ -3228,17 +3231,39 @@ class WalletHome extends React.Component {
         if (va.barcode.value.length > 0) {
             o_obj.barcode = va.barcode.value;
         }
-        if (va.country.value.length > 0) {
-            o_obj.country = va.country.value;
+        let country_array = [];
+        let country_string = '';
+        if (this.state.countriesSelected) {
+            for (const country in this.state.countriesSelected) {
+                country_string += `${this.state.countriesSelected[country].value},`
+                console.log(country);
+                country_array.push(this.state.countriesSelected[country].value);
+            }
+            country_string.substring(0, country_string.length - 1);
+            o_obj.country = country_string;
         }
         let active = 0;
         if (this.state.active_offer_switch === true) {
             active = 1;
         }
 
+        let the_peg = {};
+        let peg_used = false;
+        the_peg.id = '';
+        if (va.selected_price_oracle.value === 'none') {
+            the_peg = 0;
+        } else {
+            the_peg.id = this.state.price_oracles_list[va.selected_price_oracle.selectedIndex].price_peg_id;
+            alert(the_peg.id);
+            peg_used = true;
+        }
+        let min_sfx_p = 0;
+        if (va.min_sfx_price.value > 0) {
+            min_sfx_p = va.min_sfx_price.value;
+        }
+
         o_obj.shipping = this.state.shipping_switch;
         o_obj.nft = this.state.nft_switch;
-        o_obj.open_message = this.state.open_message_switch;
 
         try {
             let mixins = va.mixins.value - 1;
@@ -3255,9 +3280,9 @@ class WalletHome extends React.Component {
                         va.price.value,
                         va.quantity.value,
                         JSON.stringify(o_obj),
-                        '',
-                        va.price.value,
-                        0,
+                        peg_used,
+                        the_peg.id,
+                        min_sfx_p,
                         active,
                         mixins
                     );
@@ -3674,7 +3699,7 @@ class WalletHome extends React.Component {
                                                         <Form.Control required name="city"/>
                                                     </Row>
                                                     <Row style={{width: '100%'}}>
-                                                        {this.state.purchase_country == 'US' ? (
+                                                        {this.state.purchase_country != '' ? (
                                                                 <div><label>State/Country:</label>
                                                                     <RegionDropdown country={this.state.purchase_country}
                                                                                     value={this.state.purchase_state}
@@ -4777,10 +4802,20 @@ class WalletHome extends React.Component {
                                                     </select>
                                                 </Col>
                                             </Row>
-                                            <Row>
-                                                <Col md={3}>
-                                                    <Form.Label>Country of Origin</Form.Label>
-                                                    <Form.Control name="country" placedholder="your location"/>
+                                            <Row className="w-100" style={{padding: '5px'}}>
+                                                <Col md={6}>
+                                                    <Form.Label>Shipping Destinations</Form.Label>
+                                                    <ReactSelect
+                                                        maxMenuHeight={120}
+                                                        options={countryOptions}
+                                                        isMulti
+                                                        closeMenuOnSelect={false}
+                                                        hideSelectedOptions={false}
+                                                        components={{CountrySelector}}
+                                                        onChange={this.handleCountryChange}
+                                                        allowSelectAll={true}
+                                                        value={this.state.countriesSelected}
+                                                    />
                                                 </Col>
                                                 <Col md={3}>
                                                     <Form.Check
@@ -4790,8 +4825,6 @@ class WalletHome extends React.Component {
                                                         type="switch"
                                                         id="shipping-switch"
                                                         name="shipping"/>
-                                                </Col>
-                                                <Col md={3}>
                                                     <Form.Check
                                                         label="NFT"
                                                         checked={this.state.nft_switch}
