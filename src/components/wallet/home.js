@@ -2807,6 +2807,10 @@ class WalletHome extends React.Component {
                     alert_bool = true;
                     alert_text += ` country must be selected`;
                 }
+                if (this.state.purchase_state == '') {
+                    alert_bool = true;
+                    alert_text += ` state must be selected`;
+                }
 
                 if (alert_bool) {
                     alert(alert_text);
