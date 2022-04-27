@@ -75,7 +75,7 @@ import {
     merchant_reply_message,
     buyer_get_messages,
     buyer_send_message,
-    is_user_registered
+    is_user_registered, get_offer_by_id
 } from "../../utils/twm_actions";
 
 import zlib from 'zlib';
@@ -1045,7 +1045,8 @@ class WalletHome extends React.Component {
         this.setState({interface_view: 'history', keyRequest: false})
     };
 
-    logout = () => {
+    logout = async () => {
+        wallet.store(await this.wallet_store_callback());
         wallet.close(true, this.logout_callback);
     };
 
@@ -1107,24 +1108,38 @@ class WalletHome extends React.Component {
     };
 
     //show modal of Purchase Form
-    handleShowPurchaseForm = (listing, data, order_obj) => {
-        //here we need to fetch the pub keys of the seller.
-        let country_array = [];
-        console.log(data);
-        console.log(data.country);
-        if (data.country) {
-            country_array = data.country.split(',');
-            console.log(country_array);
+    handleShowPurchaseForm = async (listing, data, order_obj) => {
+
+        try {
+            let t_offer = await get_offer_by_id(listing.offerID, `https://api.theworldmarketplace.com`);
+            console.log(t_offer);
+            if (t_offer) {
+                let country_array = [];
+                console.log(data);
+                console.log(data.country);
+                if (data.country) {
+                    country_array = data.country.split(',');
+                    console.log(country_array);
+                }
+                this.setState({
+                    quantity_input: 1,
+                    show_purchase_form: true,
+                    show_purchase_offer: listing,
+                    show_purchase_offer_data: data,
+                    show_purchase_order_obj: order_obj,
+                    purchase_country_array: country_array,
+                    purchase_country: country_array.length > 0 ? country_array[0] : ''
+                });
+            } else {
+                alert(`the listing may be sold out`);
+            }
+        } catch(err) {
+            console.error(err);
+            console.error(`error at fetching this offer`);
+            alert(`there was an error getting the offer, it might be sold out`)
         }
-        this.setState({
-            quantity_input: 1,
-            show_purchase_form: true,
-            show_purchase_offer: listing,
-            show_purchase_offer_data: data,
-            show_purchase_order_obj: order_obj,
-            purchase_country_array: country_array,
-            purchase_country: country_array.length > 0 ? country_array[0] : ''
-        });
+        //here we need to fetch the pub keys of the seller.
+
     };
 
     // Show order confirmed modal
@@ -2753,409 +2768,419 @@ class WalletHome extends React.Component {
     };
 
     purchase_item = async (e, listing) => {
-        e.preventDefault();
-        e.persist();
-        console.log(JSON.stringify(listing));
-        console.log(this.state.show_purchase_offer);
-        listing.price = this.state.show_purchase_order_obj.fiat_price_sfx;
+        try {
+            let t_offer = await get_offer_by_id(listing.offerID, `https://api.theworldmarketplace.com`);
+            if (t_offer) {
+                e.preventDefault();
+                e.persist();
+                console.log(JSON.stringify(listing));
+                console.log(this.state.show_purchase_offer);
+                listing.price = this.state.show_purchase_order_obj.fiat_price_sfx;
 
-        let quant = e.target.quantity.value;
+                let quant = e.target.quantity.value;
 
-        //if the listing quantity > 0 //
-        var va = e.target;
-        let mixins = e.target.mixins.value - 1;
-        if (listing.quantity < 1) {
-            alert(`there is no quantity left to buy`)
-        } else {
-
-            if (e.target.quantity.value <= listing.quantity) {
-
-                console.log(listing);
-                console.log(e.target.quantity.value);
-                console.log(`mixins`);
-                console.log(e.target.mixins.value);
-                console.log(listing.username);
-
-                let total_cost = quant * (listing.price);
-                console.log(`TOTAL COST!!!!!!!!`);
-                console.log(total_cost);
-                console.log(listing.price);
-                console.log(quant);
-                console.log(this.state.cash);
-                console.log(`listing quant ${listing.quantity}`)
-
-                let alert_bool = false;
-                let alert_text = ``;
-
-                if (quant < 1) {
-                    alert_text += ` quantity can not be 0 or negative :)`;
-                    alert_bool = true;
-                }
-                if (quant % 1 !== 0) {
-                    alert_text += ` quantity must be a whole number :)`;
-                    alert_bool = true;
-                }
-                if (Number.parseInt(quant) > listing.quantity) {
-                    alert_text += ` not enough quantity available: you wanted ${quant} but there are only ${listing.quantity} available`;
-                    alert_bool = true;
-                }
-                if (total_cost > this.state.cash) {
-                    alert_text += ` not enough SFX available for this purchase: total cost: ${total_cost} SFX, your balance: ${this.state.cash.toLocaleString()} SFX`;
-                    alert_bool = true;
-                }
-                if (this.state.purchase_country == '') {
-                    alert_bool = true;
-                    alert_text += ` country must be selected`;
-                }
-                if (this.state.purchase_state == '') {
-                    alert_bool = true;
-                    alert_text += ` state must be selected`;
-                }
-
-                if (alert_bool) {
-                    alert(alert_text);
+                //if the listing quantity > 0 //
+                var va = e.target;
+                let mixins = e.target.mixins.value - 1;
+                if (listing.quantity < 1) {
+                    alert(`there is no quantity left to buy`)
                 } else {
+                    if (e.target.quantity.value <= listing.quantity) {
 
-                    try {
-                        if (mixins >= 0) {
-                            let confirmed;
-                            let confirm_message = '';
-                            let open_message = '';
-                            let nft_address = '';
-                            let shipping = {};
-                            shipping.fn = '';
-                            shipping.ln = '';
-                            shipping.a1 = '';
-                            shipping.a2 = '';
-                            shipping.a3 = '';
-                            shipping.city = '';
-                            shipping.s = '';
-                            shipping.z = '';
-                            shipping.c = '';
-                            shipping.ea = '';
-                            shipping.ph = '';
+                        console.log(listing);
+                        console.log(e.target.quantity.value);
+                        console.log(`mixins`);
+                        console.log(e.target.mixins.value);
+                        console.log(listing.username);
 
-                            confirm_message = `Are you sure you want to purchase ${quant} of ${listing.title} for a total of ${total_cost} SFX?`;
+                        let total_cost = quant * (listing.price);
+                        console.log(`TOTAL COST!!!!!!!!`);
+                        console.log(total_cost);
+                        console.log(listing.price);
+                        console.log(quant);
+                        console.log(this.state.cash);
+                        console.log(`listing quant ${listing.quantity}`)
 
-                            confirmed = window.confirm(confirm_message);
+                        let alert_bool = false;
+                        let alert_text = ``;
 
-                            console.log(confirmed);
-                            if (confirmed) {
-                                try {
-                                    console.log(listing.title);
-                                    console.log(listing.offer_id);
-                                    console.log(listing.price);
-                                    console.log(total_cost);
-                                    console.log(mixins);
-                                    this.setState({
-                                        purchase_txn_image: listing.main_image,
-                                        purchase_txn_quantity: quant,
-                                        purchase_txn_title: listing.title,
-                                        purchase_txn_seller: listing.username,
-                                        purchase_txn_offerid: listing.offer_id,
-                                        purchase_txn_price: listing.price,
-                                        purchase_txn_total_cost: total_cost,
-                                        showLoader: true
-                                    });
+                        if (quant < 1) {
+                            alert_text += ` quantity can not be 0 or negative :)`;
+                            alert_bool = true;
+                        }
+                        if (quant % 1 !== 0) {
+                            alert_text += ` quantity must be a whole number :)`;
+                            alert_bool = true;
+                        }
+                        if (Number.parseInt(quant) > listing.quantity) {
+                            alert_text += ` not enough quantity available: you wanted ${quant} but there are only ${listing.quantity} available`;
+                            alert_bool = true;
+                        }
+                        if (total_cost > this.state.cash) {
+                            alert_text += ` not enough SFX available for this purchase: total cost: ${total_cost} SFX, your balance: ${this.state.cash.toLocaleString()} SFX`;
+                            alert_bool = true;
+                        }
+                        if (this.state.purchase_country == '') {
+                            alert_bool = true;
+                            alert_text += ` country must be selected`;
+                        }
+                        if (this.state.purchase_state == '') {
+                            alert_bool = true;
+                            alert_text += ` state must be selected`;
+                        }
 
-                                    let purchase_txn = await this.purchase_offer_async(
-                                        wallet,
-                                        total_cost,
-                                        listing.offer_id,
-                                        quant,
-                                        mixins
-                                    );
+                        if (alert_bool) {
+                            alert(alert_text);
+                        } else {
 
-                                    let confirmed_fee = window.confirm(`The fee to send this transaction will be:  ${purchase_txn.fee() / 10000000000}SFX`);
-                                    let fee = purchase_txn.fee();
-                                    let txid = purchase_txn.transactionsIds();
-                                    console.log(txid);
-                                    if (confirmed_fee) {
+                            try {
+                                if (mixins >= 0) {
+                                    let confirmed;
+                                    let confirm_message = '';
+                                    let open_message = '';
+                                    let nft_address = '';
+                                    let shipping = {};
+                                    shipping.fn = '';
+                                    shipping.ln = '';
+                                    shipping.a1 = '';
+                                    shipping.a2 = '';
+                                    shipping.a3 = '';
+                                    shipping.city = '';
+                                    shipping.s = '';
+                                    shipping.z = '';
+                                    shipping.c = '';
+                                    shipping.ea = '';
+                                    shipping.ph = '';
+
+                                    confirm_message = `Are you sure you want to purchase ${quant} of ${listing.title} for a total of ${total_cost} SFX?`;
+
+                                    confirmed = window.confirm(confirm_message);
+
+                                    console.log(confirmed);
+                                    if (confirmed) {
                                         try {
-                                            this.setState({purchase_txn_id: txid, purchase_txn_fee: fee});
+                                            console.log(listing.title);
+                                            console.log(listing.offer_id);
+                                            console.log(listing.price);
+                                            console.log(total_cost);
+                                            console.log(mixins);
+                                            this.setState({
+                                                purchase_txn_image: listing.main_image,
+                                                purchase_txn_quantity: quant,
+                                                purchase_txn_title: listing.title,
+                                                purchase_txn_seller: listing.username,
+                                                purchase_txn_offerid: listing.offer_id,
+                                                purchase_txn_price: listing.price,
+                                                purchase_txn_total_cost: total_cost,
+                                                showLoader: true
+                                            });
 
-                                            if (this.state.offer_loading_flag === 'twmurl') {
+                                            let purchase_txn = await this.purchase_offer_async(
+                                                wallet,
+                                                total_cost,
+                                                listing.offer_id,
+                                                quant,
+                                                mixins
+                                            );
+
+                                            let confirmed_fee = window.confirm(`The fee to send this transaction will be:  ${purchase_txn.fee() / 10000000000}SFX`);
+                                            let fee = purchase_txn.fee();
+                                            let txid = purchase_txn.transactionsIds();
+                                            console.log(txid);
+                                            if (confirmed_fee) {
                                                 try {
-                                                    if (listing.nft === true) {
-                                                        confirm_message += ` sent to eth address ${e.target.eth_address.value}`;
-                                                        nft_address = va.eth_address.value;
-                                                    }
-                                                    if (listing.shipping === true) {
-                                                        //complete confirm message for all fields
-                                                        if (va.first_name.value.length > 0) {
-                                                            shipping.fn = e.target.first_name.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.last_name.value.length > 0) {
-                                                            shipping.ln = e.target.last_name.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.address1.value.length > 0) {
-                                                            shipping.a1 = e.target.address1.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.address2.value.length > 0) {
-                                                            shipping.a2 = e.target.address2.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.city.value.length > 0) {
-                                                            shipping.city = e.target.city.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.state.value.length > 0) {
-                                                            shipping.s = e.target.state.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.zipcode.value.length > 0) {
-                                                            shipping.z = e.target.zipcode.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.country.value.length > 0) {
-                                                            shipping.c = e.target.country.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.email_address.value.length > 0) {
-                                                            shipping.ea = e.target.email_address.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        if (va.phone_number.value.length > 0) {
-                                                            shipping.ph = e.target.phone_number.value;
-                                                        } else {
-                                                            //figure out how to break out of this channel
-                                                        }
-                                                        confirm_message += ` delivered physical property to ${e.target.first_name.value}`;
-                                                    }
-                                                    if (listing.open_message === true) {
-                                                        let o_m = e.target.open_message.value;
-                                                        if (o_m.length > 0 && o_m < 400) {
-                                                            confirm_message += ` ${e.target.open_message.value}`;
-                                                            open_message = e.target.open_message.value;
-                                                        } else {
-                                                            //too many characters
-                                                        }
-                                                    }
+                                                    this.setState({purchase_txn_id: txid, purchase_txn_fee: fee});
 
-                                                    let twm_confirm = window.confirm(confirm_message);
-
-                                                    if (twm_confirm) {
-                                                        let twm_file = this.state.twm_file;
-
-                                                        let seller_pubkey = await get_seller_pubkey(listing.username, this.state.api_url);
-
-                                                        console.log(seller_pubkey);
-
-                                                        const crypto = window.require('crypto');
-
-                                                        const {
-                                                            privateKey,
-                                                            publicKey
-                                                        } = await crypto.generateKeyPairSync('rsa', {
-                                                            modulusLength: 4096,
-                                                            publicKeyEncoding: {
-                                                                type: 'pkcs1',
-                                                                format: 'pem'
-                                                            },
-                                                            privateKeyEncoding: {
-                                                                type: 'pkcs8',
-                                                                format: 'pem',
-                                                            }
-                                                        });
-
-                                                        let api_file_url_offer_id;
-
-                                                        if (twm_file.api.urls.hasOwnProperty(this.state.api_url)) {
-                                                            if (twm_file.api.urls[this.state.api_url].hasOwnProperty(listing.offer_id)) {
-                                                                //generate a new pgp key
-                                                                let api_file_url = twm_file.api.urls[this.state.api_url];
-                                                                api_file_url_offer_id = api_file_url[listing.offer_id];
-
-                                                            } else {
-                                                                let api_file_url = twm_file.api.urls[this.state.api_url];
-                                                                api_file_url[listing.offer_id] = {};
-                                                                api_file_url_offer_id = api_file_url[listing.offer_id];
-                                                            }
-                                                        } else {
-                                                            //if the api was never yet before saved
-                                                            twm_file.api.urls[this.state.api_url] = {};
-                                                            let api_file_url = twm_file.api.urls[this.state.api_url];
-                                                            api_file_url[listing.offer_id] = {};
-                                                            api_file_url_offer_id = api_file_url[listing.offer_id];
-                                                        }
-
-                                                        let order_id_string = publicKey + listing.offer_id + this.state.blockchain_height;
-                                                        let order_id_hash = keccak256(order_id_string).toString('hex');
-                                                        api_file_url_offer_id[order_id_hash] = {};
-
-                                                        let message_header_obj = {};
-                                                        message_header_obj.sender_pgp_pub_key = publicKey;
-                                                        message_header_obj.to = listing.username;
-                                                        message_header_obj.from = publicKey;
-                                                        message_header_obj.order_id = order_id_hash;
-                                                        message_header_obj.purchase_proof = txid[0];
-                                                        message_header_obj.bc_height = this.state.blockchain_height;
-
-                                                        let pre_sign_message_obj = {};
-                                                        pre_sign_message_obj.s = ''; //subject
-                                                        pre_sign_message_obj.o = listing.offer_id; //offer_id
-                                                        pre_sign_message_obj.m = open_message; //open_message contents
-                                                        pre_sign_message_obj.n = nft_address; //nft address
-                                                        pre_sign_message_obj.so = JSON.stringify(shipping); //shipping object
-
-                                                        message_header_obj.message_hash = keccak256(JSON.stringify(pre_sign_message_obj)).toString('hex');
-
-                                                        message_header_obj.message_signature = '';
-
-                                                        let pres_sign_string = JSON.stringify(pre_sign_message_obj);
-
-                                                        const signature = crypto.sign("sha256", Buffer.from(pres_sign_string), {
-                                                            key: privateKey,
-                                                            padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-                                                        });
-
-                                                        message_header_obj.message_signature = signature;
-
-                                                        let compressed_message_obj = zlib.deflateSync(Buffer.from(JSON.stringify(pre_sign_message_obj)));
-
-                                                        console.log(": " + compressed_message_obj.length + " characters, " +
-                                                            Buffer.byteLength((compressed_message_obj), 'utf8') + " bytes");
-
-                                                        let found_key = crypto.createPublicKey(seller_pubkey.user.pgp_key);
-
-                                                        let encrypted_message = crypto.publicEncrypt(
-                                                            {
-                                                                key: found_key,
-                                                                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-                                                                oaepHash: "sha256",
-                                                            },
-                                                            compressed_message_obj
-                                                        );
-
-                                                        let hex_enc_msg = this.byteToHexString(encrypted_message);
-
-                                                        const enc_signature = crypto.sign("sha256", Buffer.from(encrypted_message), {
-                                                            key: privateKey,
-                                                            padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-                                                        });
-
-                                                        let hex_enc_sig = this.byteToHexString(enc_signature);
-
-                                                        message_header_obj.encrypted_message_signature = hex_enc_sig;
-
-                                                        message_header_obj.encrypted_message = hex_enc_msg;
-
-                                                        let tdispatched = await dispatch_purchase_message(message_header_obj, this.state.api_url);
-
-                                                        console.log(tdispatched);
-
-                                                        message_header_obj.message = pre_sign_message_obj;
-
-                                                        let purchase_obj = {};
-                                                        purchase_obj.api_url = this.state.api_url;
-                                                        purchase_obj.offer_id = listing.offer_id;
-                                                        purchase_obj.title = listing.title;
-                                                        purchase_obj.price = listing.price;
-                                                        purchase_obj.quantity = quant;
-                                                        purchase_obj.bc_height = message_header_obj.bc_height;
-                                                        api_file_url_offer_id[order_id_hash].pgp_keys = {
-                                                            private_key: privateKey,
-                                                            public_key: publicKey
-                                                        };
-                                                        api_file_url_offer_id[order_id_hash].messages = {};
-                                                        api_file_url_offer_id[order_id_hash].purchase_obj = purchase_obj;
-                                                        api_file_url_offer_id[order_id_hash].messages['1'] = message_header_obj;
-
-                                                        console.log(twm_file);
+                                                    if (this.state.offer_loading_flag === 'twmurl') {
                                                         try {
+                                                            if (listing.nft === true) {
+                                                                confirm_message += ` sent to eth address ${e.target.eth_address.value}`;
+                                                                nft_address = va.eth_address.value;
+                                                            }
+                                                            if (listing.shipping === true) {
+                                                                //complete confirm message for all fields
+                                                                if (va.first_name.value.length > 0) {
+                                                                    shipping.fn = e.target.first_name.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.last_name.value.length > 0) {
+                                                                    shipping.ln = e.target.last_name.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.address1.value.length > 0) {
+                                                                    shipping.a1 = e.target.address1.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.address2.value.length > 0) {
+                                                                    shipping.a2 = e.target.address2.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.city.value.length > 0) {
+                                                                    shipping.city = e.target.city.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.state.value.length > 0) {
+                                                                    shipping.s = e.target.state.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.zipcode.value.length > 0) {
+                                                                    shipping.z = e.target.zipcode.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.country.value.length > 0) {
+                                                                    shipping.c = e.target.country.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.email_address.value.length > 0) {
+                                                                    shipping.ea = e.target.email_address.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                if (va.phone_number.value.length > 0) {
+                                                                    shipping.ph = e.target.phone_number.value;
+                                                                } else {
+                                                                    //figure out how to break out of this channel
+                                                                }
+                                                                confirm_message += ` delivered physical property to ${e.target.first_name.value}`;
+                                                            }
+                                                            if (listing.open_message === true) {
+                                                                let o_m = e.target.open_message.value;
+                                                                if (o_m.length > 0 && o_m < 400) {
+                                                                    confirm_message += ` ${e.target.open_message.value}`;
+                                                                    open_message = e.target.open_message.value;
+                                                                } else {
+                                                                    //too many characters
+                                                                }
+                                                            }
 
-                                                            const crypto = window.require('crypto');
-                                                            const algorithm = 'aes-256-ctr';
-                                                            console.log(this.state.password);
-                                                            const cipher = crypto.createCipher(algorithm, this.state.password.toString());
-                                                            let crypted = cipher.update(JSON.stringify(twm_file), 'utf8', 'hex');
-                                                            crypted += cipher.final('hex');
+                                                            let twm_confirm = window.confirm(confirm_message);
 
-                                                            const hash1 = crypto.createHash('sha256');
-                                                            hash1.update(JSON.stringify(twm_file));
-                                                            console.log(`password ${this.state.password}`);
-                                                            console.log(JSON.stringify(twm_file));
+                                                            if (twm_confirm) {
+                                                                let twm_file = this.state.twm_file;
 
-                                                            let twm_save = await save_twm_file(this.state.new_path + '.twm', crypted, this.state.password, hash1.digest('hex'));
+                                                                let seller_pubkey = await get_seller_pubkey(listing.username, this.state.api_url);
 
-                                                            try {
-                                                                let opened_twm_file = await open_twm_file(this.state.new_path + '.twm', this.state.password);
-                                                                console.log(opened_twm_file);
+                                                                console.log(seller_pubkey);
 
-                                                                localStorage.setItem('twm_file', twm_file);
+                                                                const crypto = window.require('crypto');
 
-                                                                this.setState({twm_file: twm_file});
+                                                                const {
+                                                                    privateKey,
+                                                                    publicKey
+                                                                } = await crypto.generateKeyPairSync('rsa', {
+                                                                    modulusLength: 4096,
+                                                                    publicKeyEncoding: {
+                                                                        type: 'pkcs1',
+                                                                        format: 'pem'
+                                                                    },
+                                                                    privateKeyEncoding: {
+                                                                        type: 'pkcs8',
+                                                                        format: 'pem',
+                                                                    }
+                                                                });
 
-                                                            } catch (err) {
-                                                                this.setState({showLoader: false});
-                                                                console.error(err);
-                                                                console.error(`error opening twm file after save to verify`);
-                                                                alert(`Error at saving to the twm file during account creation verification stage`);
+                                                                let api_file_url_offer_id;
+
+                                                                if (twm_file.api.urls.hasOwnProperty(this.state.api_url)) {
+                                                                    if (twm_file.api.urls[this.state.api_url].hasOwnProperty(listing.offer_id)) {
+                                                                        //generate a new pgp key
+                                                                        let api_file_url = twm_file.api.urls[this.state.api_url];
+                                                                        api_file_url_offer_id = api_file_url[listing.offer_id];
+
+                                                                    } else {
+                                                                        let api_file_url = twm_file.api.urls[this.state.api_url];
+                                                                        api_file_url[listing.offer_id] = {};
+                                                                        api_file_url_offer_id = api_file_url[listing.offer_id];
+                                                                    }
+                                                                } else {
+                                                                    //if the api was never yet before saved
+                                                                    twm_file.api.urls[this.state.api_url] = {};
+                                                                    let api_file_url = twm_file.api.urls[this.state.api_url];
+                                                                    api_file_url[listing.offer_id] = {};
+                                                                    api_file_url_offer_id = api_file_url[listing.offer_id];
+                                                                }
+
+                                                                let order_id_string = publicKey + listing.offer_id + this.state.blockchain_height;
+                                                                let order_id_hash = keccak256(order_id_string).toString('hex');
+                                                                api_file_url_offer_id[order_id_hash] = {};
+
+                                                                let message_header_obj = {};
+                                                                message_header_obj.sender_pgp_pub_key = publicKey;
+                                                                message_header_obj.to = listing.username;
+                                                                message_header_obj.from = publicKey;
+                                                                message_header_obj.order_id = order_id_hash;
+                                                                message_header_obj.purchase_proof = txid[0];
+                                                                message_header_obj.bc_height = this.state.blockchain_height;
+
+                                                                let pre_sign_message_obj = {};
+                                                                pre_sign_message_obj.s = ''; //subject
+                                                                pre_sign_message_obj.o = listing.offer_id; //offer_id
+                                                                pre_sign_message_obj.m = open_message; //open_message contents
+                                                                pre_sign_message_obj.n = nft_address; //nft address
+                                                                pre_sign_message_obj.so = JSON.stringify(shipping); //shipping object
+
+                                                                message_header_obj.message_hash = keccak256(JSON.stringify(pre_sign_message_obj)).toString('hex');
+
+                                                                message_header_obj.message_signature = '';
+
+                                                                let pres_sign_string = JSON.stringify(pre_sign_message_obj);
+
+                                                                const signature = crypto.sign("sha256", Buffer.from(pres_sign_string), {
+                                                                    key: privateKey,
+                                                                    padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+                                                                });
+
+                                                                message_header_obj.message_signature = signature;
+
+                                                                let compressed_message_obj = zlib.deflateSync(Buffer.from(JSON.stringify(pre_sign_message_obj)));
+
+                                                                console.log(": " + compressed_message_obj.length + " characters, " +
+                                                                    Buffer.byteLength((compressed_message_obj), 'utf8') + " bytes");
+
+                                                                let found_key = crypto.createPublicKey(seller_pubkey.user.pgp_key);
+
+                                                                let encrypted_message = crypto.publicEncrypt(
+                                                                    {
+                                                                        key: found_key,
+                                                                        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                                                                        oaepHash: "sha256",
+                                                                    },
+                                                                    compressed_message_obj
+                                                                );
+
+                                                                let hex_enc_msg = this.byteToHexString(encrypted_message);
+
+                                                                const enc_signature = crypto.sign("sha256", Buffer.from(encrypted_message), {
+                                                                    key: privateKey,
+                                                                    padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+                                                                });
+
+                                                                let hex_enc_sig = this.byteToHexString(enc_signature);
+
+                                                                message_header_obj.encrypted_message_signature = hex_enc_sig;
+
+                                                                message_header_obj.encrypted_message = hex_enc_msg;
+
+                                                                let tdispatched = await dispatch_purchase_message(message_header_obj, this.state.api_url);
+
+                                                                console.log(tdispatched);
+
+                                                                message_header_obj.message = pre_sign_message_obj;
+
+                                                                let purchase_obj = {};
+                                                                purchase_obj.api_url = this.state.api_url;
+                                                                purchase_obj.offer_id = listing.offer_id;
+                                                                purchase_obj.title = listing.title;
+                                                                purchase_obj.price = listing.price;
+                                                                purchase_obj.quantity = quant;
+                                                                purchase_obj.bc_height = message_header_obj.bc_height;
+                                                                api_file_url_offer_id[order_id_hash].pgp_keys = {
+                                                                    private_key: privateKey,
+                                                                    public_key: publicKey
+                                                                };
+                                                                api_file_url_offer_id[order_id_hash].messages = {};
+                                                                api_file_url_offer_id[order_id_hash].purchase_obj = purchase_obj;
+                                                                api_file_url_offer_id[order_id_hash].messages['1'] = message_header_obj;
+
+                                                                console.log(twm_file);
+                                                                try {
+
+                                                                    const crypto = window.require('crypto');
+                                                                    const algorithm = 'aes-256-ctr';
+                                                                    console.log(this.state.password);
+                                                                    const cipher = crypto.createCipher(algorithm, this.state.password.toString());
+                                                                    let crypted = cipher.update(JSON.stringify(twm_file), 'utf8', 'hex');
+                                                                    crypted += cipher.final('hex');
+
+                                                                    const hash1 = crypto.createHash('sha256');
+                                                                    hash1.update(JSON.stringify(twm_file));
+                                                                    console.log(`password ${this.state.password}`);
+                                                                    console.log(JSON.stringify(twm_file));
+
+                                                                    let twm_save = await save_twm_file(this.state.new_path + '.twm', crypted, this.state.password, hash1.digest('hex'));
+
+                                                                    try {
+                                                                        let opened_twm_file = await open_twm_file(this.state.new_path + '.twm', this.state.password);
+                                                                        console.log(opened_twm_file);
+
+                                                                        localStorage.setItem('twm_file', twm_file);
+
+                                                                        this.setState({twm_file: twm_file});
+
+                                                                    } catch (err) {
+                                                                        this.setState({showLoader: false});
+                                                                        console.error(err);
+                                                                        console.error(`error opening twm file after save to verify`);
+                                                                        alert(`Error at saving to the twm file during account creation verification stage`);
+                                                                    }
+                                                                } catch (err) {
+                                                                    this.setState({showLoader: false});
+                                                                    console.error(err);
+                                                                    console.error(`error at initial save of the twm file`);
+                                                                    alert(`Error at saving to the twm file during account creation initialization stage`);
+                                                                }
+                                                                console.log(`payments from twm_url`);
+                                                                let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
+                                                                console.log(`purchase transaction committed`);
+                                                                alert(`The purchase has been submitted`);
                                                             }
                                                         } catch (err) {
                                                             this.setState({showLoader: false});
+                                                            alert(`Error at getting the sellers public key from the api server`);
                                                             console.error(err);
-                                                            console.error(`error at initial save of the twm file`);
-                                                            alert(`Error at saving to the twm file during account creation initialization stage`);
+                                                            console.error(`error at getting the sellers public key from the api server`);
                                                         }
-                                                        console.log(`payments from twm_url`);
+                                                    } else {
                                                         let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
                                                         console.log(`purchase transaction committed`);
-                                                        alert(`The purchase has been submitted`);
                                                     }
                                                 } catch (err) {
                                                     this.setState({showLoader: false});
-                                                    alert(`Error at getting the sellers public key from the api server`);
                                                     console.error(err);
-                                                    console.error(`error at getting the sellers public key from the api server`);
+                                                    console.error(`error when trying to commit the purchase transaction to the blockchain`);
+                                                    alert(`error when trying to commit the purchase transaction to the blockchain`);
                                                 }
                                             } else {
-                                                let commit_purchase = this.commit_purchase_offer_async(purchase_txn);
-                                                console.log(`purchase transaction committed`);
+                                                this.setState({showLoader: false});
+                                                console.log("purchase transaction cancelled");
                                             }
                                         } catch (err) {
                                             this.setState({showLoader: false});
                                             console.error(err);
-                                            console.error(`error when trying to commit the purchase transaction to the blockchain`);
-                                            alert(`error when trying to commit the purchase transaction to the blockchain`);
+                                            console.error(`error at the purchase transaction formation it was not commited`);
+                                            alert(`error at the purchase transaction formation it was not commited`);
                                         }
-                                    } else {
-                                        this.setState({showLoader: false});
-                                        console.log("purchase transaction cancelled");
                                     }
-                                } catch (err) {
                                     this.setState({showLoader: false});
-                                    console.error(err);
-                                    console.error(`error at the purchase transaction formation it was not commited`);
-                                    alert(`error at the purchase transaction formation it was not commited`);
                                 }
+                            } catch (err) {
+                                this.setState({showLoader: false});
+                                console.error(err);
+                                if (err.toString().startsWith('not enough outputs')) {
+                                    alert(`Choose fewer mixins`);
+                                }
+                                console.error(`Error at the purchase transaction`);
                             }
-                            this.setState({showLoader: false});
                         }
-                    } catch (err) {
-                        this.setState({showLoader: false});
-                        console.error(err);
-                        if (err.toString().startsWith('not enough outputs')) {
-                            alert(`Choose fewer mixins`);
-                        }
-                        console.error(`Error at the purchase transaction`);
+                    } else {
+                        alert(`You can not have 0 quantity for purchase.`);
                     }
                 }
             } else {
-                alert(`You can not have 0 quantity for purchase.`);
+                alert(`the product may have sold out while you were away`);
             }
+        } catch(err) {
+            console.error(err);
+            console.error(`error at purchasing`);
+            alert(`the product may no longer be available`);
         }
     };
 
@@ -3515,12 +3540,14 @@ class WalletHome extends React.Component {
                                         od_obj.fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
                                         fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
                                         price_row =
-                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img width="14px"
-                                                                                                     src={sfxLogo}/>
+                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img
+                                                width="14px"
+                                                src={sfxLogo}/>
                                             </li>;
                                         od_obj.price_info =
-                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img width="14px"
-                                                                                                       src={sfxLogo}/></span>;
+                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img
+                                                width="14px"
+                                                src={sfxLogo}/></span>;
                                         console.log(listing.title);
                                         console.log(fiat_price_sfx);
                                         console.log(listing.min_price);
@@ -3539,8 +3566,8 @@ class WalletHome extends React.Component {
                                     }
                                 }
                             } else {
-                                price_row = <li>{listing.price} <img width="14px" src={sfxLogo}/></li>;
-                                od_obj.price_info = <span>{listing.price} <img width="14px" src={sfxLogo}/></span>;
+                                price_row = <li>{listing.price} SFX <img width="14px" src={sfxLogo}/></li>;
+                                od_obj.price_info = <span>{listing.price} SFX <img width="14px" src={sfxLogo}/></span>;
                                 od_obj.fiat_price_sfx = listing.price;
                             }
 
@@ -3567,59 +3594,57 @@ class WalletHome extends React.Component {
                                     offer_type = 'open';
                                 }
                                 rowContents.push(
-                                    <Col md={3} key={key} style={{padding: '10px'}}>
-                                        <div className="text-center">
-                                            {listing.main_image ?
-                                                <img width="128px" height="128px" src={listing.main_image}/> :
-                                                <span style={{color: '#afafaf'}}>no product image</span>}
+                                    <Col md={3} key={key}
+                                         style={{padding: '10px'}}>
+                                        <div style={{height: '100%', padding: '5px', borderRadius: '10px', border: '1px solid #cccccc'}}>
+                                            <div className="text-center">
+                                                {listing.main_image ?
+                                                    <img width="128px" height="128px" src={listing.main_image}/> :
+                                                    <span style={{color: '#afafaf'}}>no product image</span>}
 
-                                            <div data-tip
-                                                 data-for={`offerTitle${key}`}>
-                                                {listing.title}
+                                                <div data-tip
+                                                     data-for={`offerTitle${key}`}>
+                                                    <span style={{fontSize: '12px'}}>{listing.title}</span>
+                                                </div>
                                             </div>
-                                        </div>
+                                            <Col md={2}></Col>
 
-                                        <Col md={3}>
-                                            <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                <li>Price:</li>
-                                                <li>Qty:</li>
-                                                <li>Seller:</li>
-                                                <li>Id:</li>
-                                            </ul>
-                                        </Col>
-                                        <Col md={9}>
-                                            <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
-                                                {price_row}
+                                            <Col md={9}>
+                                                <ul style={{listStyleType: 'none', padding: 0, margin: 0}}>
+                                                    <strong>{price_row}</strong>
 
-                                                <li>{listing.quantity}</li>
-                                                <li>{listing.username}</li>
-                                                <li>
-                                                    <div data-tip
-                                                         data-for={`offerID${key}`}>
-                                                        {this.to_ellipsis(listing.offer_id, 5, 5)}
-                                                        <CgCopy className="ml-1" onClick={() => {
-                                                            copy(listing.offer_id);
-                                                            alert('Offer ID has been copied to clipboard')
-                                                        }} size={15}/>
-                                                        <ReactTooltip id={`offerID${key}`} type='info' effect='solid'>
-                                                            <span>{listing.offer_id}</span>
-                                                        </ReactTooltip>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </Col>
+                                                    <li>{listing.quantity} in stock</li>
+                                                    <li>sold by {listing.username}</li>
+                                                    <li>
+                                                        <div data-tip
+                                                             data-for={`offerID${key}`}>
+                                                            offer id: {this.to_ellipsis(listing.offer_id, 5, 5)}
+                                                            <CgCopy className="ml-1" onClick={() => {
+                                                                copy(listing.offer_id);
+                                                                alert('Offer ID has been copied to clipboard')
+                                                            }} size={15}/>
+                                                            <ReactTooltip id={`offerID${key}`} type='info'
+                                                                          effect='solid'>
+                                                                <span>offer id: {listing.offer_id}</span>
+                                                            </ReactTooltip>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </Col>
+                                            <br/>
 
-                                        <div className="text-center">
-                                            {listing.quantity <= 0 ?
-                                                (<button className="search-button" disabled>
-                                                    Sold out
-                                                </button>)
-                                                :
-                                                (<button style={{fontSize: '1.5rem'}} className="search-button"
-                                                         onClick={() => this.handleShowPurchaseForm(listing, data, od_obj)}>
-                                                    View listing
-                                                </button>)
-                                            }
+                                            <div className="text-center">
+                                                {listing.quantity <= 0 ?
+                                                    (<button className="search-button" disabled>
+                                                        Sold out
+                                                    </button>)
+                                                    :
+                                                    (<button style={{fontSize: '1.5rem'}} className="search-button"
+                                                             onClick={() => this.handleShowPurchaseForm(listing, data, od_obj)}>
+                                                        View listing
+                                                    </button>)
+                                                }
+                                            </div>
                                         </div>
                                     </Col>
                                 )
@@ -3628,7 +3653,8 @@ class WalletHome extends React.Component {
                                 console.error(err);
                             }
                             if (key % 4 === 3) {
-                                acc.push(<Row key={key}>{rowContents}</Row>);
+                                acc.push(<Row className="gx-5" style={{padding: '25px', paddingBottom: '-10px'}}
+                                              key={key}>{rowContents}</Row>);
                                 rowContents = [];
                             } else if (this.state.twm_url_offers.length < 4 && key === this.state.twm_url_offers.length - 1) {
                                 acc.push(<Row key={key}>{rowContents}</Row>);
@@ -3886,17 +3912,18 @@ class WalletHome extends React.Component {
 
                                                 <Row>
                                                     <Col sm={8}>
-                                                            <label>Price:</label>
-                                                    <span className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
+                                                        <label>Price:</label>
+                                                        <span
+                                                            className="ml-2">{this.state.show_purchase_order_obj.price_info} </span>
 
                                                         <label>&nbsp;Total:&nbsp;</label>
-                                                    <span>
+                                                        <span>
                                                         {this.state.show_purchase_order_obj.fiat_bool ?
                                                             (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(2)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
                                                             ''}
-                                                        {(this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)).toFixed(4)} SFX</span>
-                                                                <img width="20px" className="ml-2"
-                                                                     src={sfxLogo}/>
+                                                            {(this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)).toFixed(4)} SFX</span>
+                                                        <img width="20px" className="ml-2"
+                                                             src={sfxLogo}/>
 
                                                         {this.state.showLoader ?
                                                             <Loader type="Bars" color="#00BFFF" height={50} width={50}/>
@@ -4093,8 +4120,8 @@ class WalletHome extends React.Component {
                                 :
                                 <div style={{
                                     marginLeft: '6%',
-                                    width: '84%',
-                                    maxHeight: '550px',
+                                    width: '90%',
+                                    maxHeight: '700px',
                                     overflowY: 'scroll',
                                     background: 'white'
                                 }}>
