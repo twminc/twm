@@ -1046,7 +1046,7 @@ class WalletHome extends React.Component {
     };
 
     logout = async () => {
-        wallet.store(await this.wallet_store_callback());
+        wallet.off();
         wallet.close(true, this.logout_callback);
     };
 
@@ -3554,10 +3554,10 @@ class WalletHome extends React.Component {
                                         if (od_obj.fiat_price_sfx < listing.min_price) {
                                             min_fiat = listing.min_price * (1 / (oracl.rate / 10000000000));
                                             price_row =
-                                                <li>{listing.min_price.toFixed(2)} {oracl_curr} | {min_fiat} <img
+                                                <li>{min_fiat.toFixed(2)} {oracl_curr} | {listing.min_price} <img
                                                     width="14px" src={sfxLogo}/></li>;
                                             od_obj.price_info =
-                                                <span>{listing.min_price.toFixed(2)} {oracl_curr} | {min_fiat} <img
+                                                <span>{min_fiat.toFixed(2)} {oracl_curr} | {listing.min_price} <img
                                                     width="14px" src={sfxLogo}/></span>;
                                             od_obj.fiat_price_sfx = listing.min_price;
                                             od_obj.min_price = min_fiat;
