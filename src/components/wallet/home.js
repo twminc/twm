@@ -1104,7 +1104,7 @@ class WalletHome extends React.Component {
 
     //close modal of Purchase Form
     handleClosePurchaseForm = () => {
-        this.setState({show_purchase_form: false});
+        this.setState({show_purchase_form: false, purchase_country: '', purchase_state: ''});
     };
 
     //show modal of Purchase Form
@@ -2768,14 +2768,13 @@ class WalletHome extends React.Component {
     };
 
     purchase_item = async (e, listing) => {
+        e.preventDefault();
+        e.persist();
         try {
             let t_offer = await get_offer_by_id(listing.offerID, `https://api.theworldmarketplace.com`);
             if (t_offer) {
-                e.preventDefault();
-                e.persist();
                 console.log(JSON.stringify(listing));
                 console.log(this.state.show_purchase_offer);
-                listing.price = this.state.show_purchase_order_obj.fiat_price_sfx;
 
                 let quant = e.target.quantity.value;
 
@@ -2793,10 +2792,10 @@ class WalletHome extends React.Component {
                         console.log(e.target.mixins.value);
                         console.log(listing.username);
 
-                        let total_cost = quant * (listing.price);
+                        let total_cost = quant * (this.state.show_purchase_order_obj.fiat_price_sfx);
                         console.log(`TOTAL COST!!!!!!!!`);
                         console.log(total_cost);
-                        console.log(listing.price);
+                        console.log(this.state.show_purchase_order_obj.fiat_price_sfx);
                         console.log(quant);
                         console.log(this.state.cash);
                         console.log(`listing quant ${listing.quantity}`)
@@ -2861,7 +2860,7 @@ class WalletHome extends React.Component {
                                         try {
                                             console.log(listing.title);
                                             console.log(listing.offer_id);
-                                            console.log(listing.price);
+                                            console.log(this.state.show_purchase_order_obj.fiat_price_sfx);
                                             console.log(total_cost);
                                             console.log(mixins);
                                             this.setState({
@@ -2870,7 +2869,7 @@ class WalletHome extends React.Component {
                                                 purchase_txn_title: listing.title,
                                                 purchase_txn_seller: listing.username,
                                                 purchase_txn_offerid: listing.offer_id,
-                                                purchase_txn_price: listing.price,
+                                                purchase_txn_price: this.state.show_purchase_order_obj.fiat_price_sfx,
                                                 purchase_txn_total_cost: total_cost,
                                                 showLoader: true
                                             });
@@ -3079,7 +3078,7 @@ class WalletHome extends React.Component {
                                                                 purchase_obj.api_url = this.state.api_url;
                                                                 purchase_obj.offer_id = listing.offer_id;
                                                                 purchase_obj.title = listing.title;
-                                                                purchase_obj.price = listing.price;
+                                                                purchase_obj.price = this.state.show_purchase_order_obj.fiat_price_sfx;
                                                                 purchase_obj.quantity = quant;
                                                                 purchase_obj.bc_height = message_header_obj.bc_height;
                                                                 api_file_url_offer_id[order_id_hash].pgp_keys = {
@@ -3519,6 +3518,7 @@ class WalletHome extends React.Component {
                             od_obj.fiat_bool = false;
                             od_obj.oracl_curr = '';
                             od_obj.min_fiat = 0;
+                            od_obj.min_price = 0;
                             od_obj.price_info = <span></span>;
                             od_obj.oracl_rate = 0;
 
@@ -3537,15 +3537,15 @@ class WalletHome extends React.Component {
                                         oracl_curr = oracl.currency;
                                         od_obj.min_price = listing.price;
                                         od_obj.oracl_rate = (1 / (oracl.rate / 10000000000));
-                                        od_obj.fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
+                                        od_obj.fiat_price_sfx = (listing.price / (1 / (oracl.rate / 10000000000))); //this is how much oracle currency into the exchange rate equals sfx, with an oracle present the listing price is the fiat price
                                         fiat_price_sfx = listing.price / (1 / (oracl.rate / 10000000000));
                                         price_row =
-                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img
+                                            <li>{listing.price} {oracl_curr} | {fiat_price_sfx} <img
                                                 width="14px"
                                                 src={sfxLogo}/>
                                             </li>;
                                         od_obj.price_info =
-                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx.toFixed(4)} <img
+                                            <span>{listing.price} {oracl_curr} | {fiat_price_sfx} <img
                                                 width="14px"
                                                 src={sfxLogo}/></span>;
                                         console.log(listing.title);
@@ -3554,10 +3554,10 @@ class WalletHome extends React.Component {
                                         if (od_obj.fiat_price_sfx < listing.min_price) {
                                             min_fiat = listing.min_price * (1 / (oracl.rate / 10000000000));
                                             price_row =
-                                                <li>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img
+                                                <li>{listing.min_price.toFixed(2)} {oracl_curr} | {min_fiat} <img
                                                     width="14px" src={sfxLogo}/></li>;
                                             od_obj.price_info =
-                                                <span>{min_fiat.toFixed(6)} {oracl_curr} | {listing.min_price} <img
+                                                <span>{listing.min_price.toFixed(2)} {oracl_curr} | {min_fiat} <img
                                                     width="14px" src={sfxLogo}/></span>;
                                             od_obj.fiat_price_sfx = listing.min_price;
                                             od_obj.min_price = min_fiat;
@@ -3708,30 +3708,30 @@ class WalletHome extends React.Component {
                                                     <Row>
                                                         <Col md={6}>
                                                             <label>First Name:</label>
-                                                            <Form.Control required name="first_name"/>
+                                                            <Form.Control  maxLength="80" required name="first_name"/>
                                                         </Col>
                                                         <Col md={6}>
                                                             <label>Last Name:</label>
-                                                            <Form.Control required name="last_name"/>
+                                                            <Form.Control  maxLength="80" required name="last_name"/>
                                                         </Col>
 
                                                     </Row>
                                                     <Row>
                                                         <label>Address Line 1:</label>
-                                                        <Form.Control required name="address1"/>
+                                                        <Form.Control  maxLength="80" required name="address1"/>
                                                     </Row>
                                                     <Row>
                                                         <label>Address Line 2:</label>
-                                                        <Form.Control name="address2"/>
+                                                        <Form.Control  maxLength="80" name="address2"/>
                                                     </Row>
                                                     <Row>
                                                         <label>City:</label>
-                                                        <Form.Control required name="city"/>
+                                                        <Form.Control  maxLength="50" required name="city"/>
                                                     </Row>
                                                     <Row style={{width: '100%'}}>
                                                         {this.state.purchase_country != '' ? (
                                                                 <div><label>State/Country:</label>
-                                                                    <RegionDropdown country={this.state.purchase_country}
+                                                                    <RegionDropdown required country={this.state.purchase_country}
                                                                                     value={this.state.purchase_state}
                                                                                     countryValueType={'short'}
                                                                                     name="state"
@@ -3743,12 +3743,12 @@ class WalletHome extends React.Component {
                                                     </Row>
                                                     <Row>
                                                         <label>Zip/Area code:</label>
-                                                        <Form.Control required name="zipcode"/>
+                                                        <Form.Control  maxLength="20" required name="zipcode"/>
                                                     </Row>
                                                     <Row>
 
                                                         <label>Country:</label>
-                                                        <CountryDropdown
+                                                        <CountryDropdown required
                                                             name="country"
                                                             value={this.state.purchase_country}
                                                             whitelist={this.state.purchase_country_array}
@@ -3757,11 +3757,11 @@ class WalletHome extends React.Component {
                                                     </Row>
                                                     <Row>
                                                         <label>Email:</label>
-                                                        <Form.Control type="email" name="email_address"/>
+                                                        <Form.Control  maxLength="80" type="email" name="email_address"/>
                                                     </Row>
                                                     <Row>
                                                         <label>Phone:</label>
-                                                        <Form.Control name="phone_number"/>
+                                                        <Form.Control  maxLength="20" name="phone_number"/>
                                                     </Row>
                                                 </div>
                                                 }
@@ -3921,7 +3921,7 @@ class WalletHome extends React.Component {
                                                         {this.state.show_purchase_order_obj.fiat_bool ?
                                                             (`${(this.state.show_purchase_order_obj.min_price * this.state.quantity_input).toFixed(2)} ${this.state.show_purchase_order_obj.oracl_curr} | `) :
                                                             ''}
-                                                            {(this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0)).toFixed(4)} SFX</span>
+                                                            {(this.state.show_purchase_order_obj.fiat_price_sfx * (this.state.quantity_input || 0))} SFX</span>
                                                         <img width="20px" className="ml-2"
                                                              src={sfxLogo}/>
 
