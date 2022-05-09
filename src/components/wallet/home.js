@@ -990,7 +990,7 @@ class WalletHome extends React.Component {
             for (const listed of loaded_offers.offers) {
                 let str_listed = JSON.stringify(listed);
                 for (const in_word of words) {
-                    if (str_listed.includes(in_word)) {
+                    if (str_listed.toLowerCase().includes(in_word.toLowerCase())) {
                         the_listings_found.push(listed);
                         break;
                     }
