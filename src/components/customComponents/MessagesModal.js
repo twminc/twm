@@ -27,7 +27,7 @@ export default class MessagesModal extends React.Component {
             if (this.props.offerId && this.props.offerId !== prevProps.offerId) {
                 const offer = await get_offer_by_id(this.props.offerId, this.props.apiUrl);
                 if (offer.offer) {
-                    return this.setState({offer: offer.offer, order_info: this.props.wOrder});
+                    return this.setState({offer: offer.offer});
                 }
             }
         } catch (err) {
@@ -35,12 +35,19 @@ export default class MessagesModal extends React.Component {
         }
     }
 
+    load_datas = () => {
+        this.setState({order_info: this.props.wOrder});
+    }
+
+
+
     render() {
         const {buyer_purchase_proof, isOpen, closeFn, orderId, refreshFn, sendFn, messages, offerId, seller, title, price, wOrder} = this.props;
-        console.log(buyer_purchase_proof);
+        console.log(wOrder);
         return (
             <ReactModal
                 isOpen={isOpen}
+                onAfterOpen={this.load_datas}
                 closeTimeoutMS={500}
                 className="buyer-messages-modal"
                 onRequestClose={() => closeFn()}
@@ -88,7 +95,7 @@ export default class MessagesModal extends React.Component {
                             </div>
                             <div className="d-flex">
                                 <label>Seller:</label>
-                                <span className="ml-2">{this.state.offer.username}</span>
+                                <span className="ml-2">{this.state.order_info.seller}</span>
                             </div>
                             <div className="d-flex">
                                 <label>Title:</label>
