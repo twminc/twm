@@ -1,28 +1,37 @@
 import React from 'react';
 
 import {Row, Col, Container, Table} from 'react-bootstrap';
+import {get_transactions} from "../../utils/safexd_calls";
 
 
 export default class History extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {
+            txn_history_table_data_state: []
+        };
 
 
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         console.log("load settings");
         this.props.updateHistory();
         console.log(this.props.theWallet.unlockedBalance());
-        console.log(`wtf man`)
 
-    };
+        this.load_all();
+    }
 
-    render() {
-        let txn_history_table_data = this.props.txnhistory.map((txn, key) => {
-            console.log(txn);
+    load_all = async() => {
+        let load_out = [];
+
+        for (const [key, txn] of this.props.txnhistory.entries()) {
+
             let the_type = '';
+            if (txn.transactionType == 1 & txn.amount > 0) {
+                txn.transactionType = 4;
+                txn.amount = 0;
+            }
             switch (txn.transactionType) {
                 case 0: {
                     console.log(`sfx txn`);
@@ -88,7 +97,7 @@ export default class History extends React.Component {
 
             if (the_type == 'your purchase') {
                 if (txn.transfers.length > 0) {
-                    return (
+                    load_out.push(
                         <tr className="tx-row" key={key}>
                             <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
                             <td>{txn.id}</td>
@@ -102,7 +111,7 @@ export default class History extends React.Component {
                         </tr>
                     )
                 } else {
-                    return (
+                    load_out.push(
                         <tr className="tx-row" key={key}>
                             <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
                             <td>{txn.id}</td>
@@ -117,8 +126,51 @@ export default class History extends React.Component {
                     )
                 }
 
+            } else if (the_type == 'unstake') {
+                try {
+
+                    let gst_obj = {};
+                    gst_obj.daemon_host = this.props.daemon_host;
+                    gst_obj.daemon_port = this.props.daemon_port;
+                    let the_tx = await get_transactions(gst_obj, txn.id);
+                    console.log(the_tx.txs[0].as_json);
+
+                    let tx_json = JSON.parse(the_tx.txs[0].as_json);
+                    console.log(tx_json.vin[0].script);
+
+
+                    load_out.push(
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{(tx_json.vin[0].script.token_amount / 10000000000)} SFT + {tx_json.vin[0].script.amount / 10000000000} SFX</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+                } catch (err) {
+                    console.error(err);
+                    load_out.push(
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{(txn.transfers[0].tokenAmount / 10000000000)} SFT</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+                }
+
             } else {
-                return (
+                load_out.push(
                     <tr className="tx-row" key={key}>
                         <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
                         <td>{txn.id}</td>
@@ -133,32 +185,38 @@ export default class History extends React.Component {
                 )
             }
 
-        });
-        console.log(txn_history_table_data);
-        return (
-                     <div className="settings-table-wrapper">
-                        <Table>
-                            <thead style={{border: '1px solid lightgray'}}>
-                                <tr>
-                                    <th>Date/Time</th>
-                                    <th>TXID</th>
-                                    <th>In/Out</th>
-                                    <th>Pending?</th>
-                                    <th>type</th>
-                                    <th>Amount</th>
-                                    <th>Fee (SFX)</th>
-                                    <th>Blockheight</th>
-                                    <th>Confirmations</th>
-                                </tr>
-                            </thead>
+        }
 
-                            <tbody>
-                                {txn_history_table_data}
-                            </tbody>
-                        </Table>
-                    </div>
-        );
+
+        this.setState({txn_history_table_data_state: load_out});
     }
 
+    render() {
 
+
+        return (
+            <div className="settings-table-wrapper">
+                <button onClick={this.load_all}>load history</button>
+                <Table>
+                    <thead style={{border: '1px solid lightgray'}}>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>TXID</th>
+                        <th>In/Out</th>
+                        <th>Pending?</th>
+                        <th>type</th>
+                        <th>Amount</th>
+                        <th>Fee (SFX)</th>
+                        <th>Blockheight</th>
+                        <th>Confirmations</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {this.state.txn_history_table_data_state}
+                    </tbody>
+                </Table>
+            </div>
+        );
+    }
 }

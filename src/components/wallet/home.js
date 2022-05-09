@@ -288,6 +288,7 @@ class WalletHome extends React.Component {
         txnhistory.sort(function (a, b) {
             return parseFloat(b.timestamp) - parseFloat(a.timestamp);
         });
+
         this.setState({txnhistory: txnhistory});
     }
 
@@ -5284,6 +5285,8 @@ class WalletHome extends React.Component {
                     return (
                         <div>
                             <History
+                                daemon_host={this.state.daemon_host}
+                                daemon_port={this.state.daemon_port}
                                 txnhistory={this.state.txnhistory}
                                 updateHistory={this.refresh_history}
                                 theWallet={wallet}
