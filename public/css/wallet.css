@@ -190,9 +190,21 @@
         border: 3px solid #ffb0ad !important;
     }
 
+
     .search-button--red:hover {
         background-color: white !important;
         color: #ff1f1f;
+        border: 0;
+    }
+
+    .search-button--green {
+        background: linear-gradient(90deg, #1fff23 0%, #1fff23 100%);
+        border: 3px solid #1fff23 !important;
+    }
+
+    .search-button--green:hover {
+        background-color: white !important;
+        color: #1fff23;
         border: 0;
     }
 

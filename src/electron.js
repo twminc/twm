@@ -61,7 +61,7 @@ function createWindow() {
                 label: "TWM Wallet",
                 submenu: [
                     {
-                        label: "TWM v1.5.0",
+                        label: "TWM v1.6.0",
                         selector: "orderFrontStandardAboutPanel:"
                     },
                     { type: "separator" },

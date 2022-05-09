@@ -179,7 +179,8 @@ class WalletHome extends React.Component {
             title_chars: 0,
             price_oracles_list: [],
             quantity_input: 1,
-            countriesSelected: null
+            countriesSelected: null,
+            buyer_purchase_proof: ''
         };
     }
 
@@ -946,13 +947,62 @@ class WalletHome extends React.Component {
 
     load_offers_from_api = async (e) => {
         e.preventDefault();
+        this.show_loading();
         try {
             console.log(this.state.api_url);
             let loaded_offers = await get_offers_url(this.state.api_url);
             console.log(loaded_offers);
             this.setState({
                 twm_url_offers: loaded_offers.offers,
-                offer_loading_flag: 'twmurl'
+                offer_loading_flag: 'twmurl',
+                showBuyerOrders: false,
+                interface_view: 'market'
+            });
+        } catch (err) {
+            console.error(err);
+        }
+
+        try {
+            let r_obj = {};
+            r_obj.daemon_host = this.state.daemon_host;
+            r_obj.daemon_port = this.state.daemon_port;
+            let p_oracles = await get_price_oracles(r_obj);
+            console.log(p_oracles);
+            this.setState({price_oracles_list: p_oracles.price_pegs});
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    load_searched_offers_from_api = async (e) => {
+        e.preventDefault();
+        this.show_loading(`loading products from your search`);
+        try {
+            console.log(this.state.api_url);
+            let loaded_offers = await get_offers_url(this.state.api_url);
+
+
+            let words = this.state.searchProducts.split(' ');
+
+            let the_listings_found = [];
+
+            for (const listed of loaded_offers.offers) {
+                let str_listed = JSON.stringify(listed);
+                for (const in_word of words) {
+                    if (str_listed.includes(in_word)) {
+                        the_listings_found.push(listed);
+                        break;
+                    }
+                }
+            }
+
+
+            console.log(loaded_offers);
+            this.setState({
+                twm_url_offers: the_listings_found,
+                offer_loading_flag: 'twmurl',
+                showBuyerOrders: false,
+                interface_view: 'market'
             });
         } catch (err) {
             console.error(err);
@@ -1010,8 +1060,8 @@ class WalletHome extends React.Component {
     };
 
     //Show loading screen
-    show_loading = () => {
-        this.setState({interface_view: 'loading', keyRequest: false})
+    show_loading = (load_text) => {
+        this.setState({interface_view: 'loading', keyRequest: false, loading_text: load_text})
     };
 
     //open market view from navigation
@@ -1063,9 +1113,9 @@ class WalletHome extends React.Component {
         }
     };
 
-    handleBuyerMessages = (offerId, orderId) => {
+    handleBuyerMessages = (offerId, orderId, theOrder) => {
         const showBuyerMessages = !this.state.showBuyerMessages;
-        this.setState({showBuyerMessages, buyerSelectOffer: offerId, buyerSelectOrder: orderId});
+        this.setState({showBuyerMessages, buyerSelectOffer: offerId, buyerSelectOrder: orderId, orderData: theOrder});
         if (showBuyerMessages) {
             // Automatically load messages when opening modal
             this.load_buyers_messages_for_selected_order(offerId, orderId);
@@ -1879,6 +1929,10 @@ class WalletHome extends React.Component {
         }
     };
 
+    handleInputChange = (e) => {
+        this.setState({[e.target.name]: e.target.value});
+    }
+
     //FETCH MESSAGES SELLER (FETCHMESSAGES)
     fetch_messages_seller = async (username, twm_api_url) => {
         try {
@@ -2198,6 +2252,7 @@ class WalletHome extends React.Component {
             const offerOrders = offers[offerId];
             for (const orderId in offerOrders) {
                 const order = offerOrders[orderId];
+                console.log(order);
                 result.push({
                     ...order.purchase_obj,
                     order_id: orderId
@@ -2212,7 +2267,9 @@ class WalletHome extends React.Component {
         if (!api_url || !buyerSelectOffer || !buyerSelectOrder || !t_f || !t_f.api || !t_f.api.urls) {
             return [];
         }
-        const messages = [];
+        let msgs_o = {};
+        msgs_o.messages = [];
+        msgs_o.proof = '';
         try {
             /** @type {BuyerOrder} */
             const core = t_f.api.urls[api_url][buyerSelectOffer][buyerSelectOrder];
@@ -2222,15 +2279,19 @@ class WalletHome extends React.Component {
             }
             for (const msg in core.messages) {
                 //console.log(t_f.api.urls[this.state.api_url][this.state.buyerSelectOffer][this.state.buyerSelectOrder].messages[msg]);
+
                 try {
                     let t_msg = core.messages[msg];
                     console.log(t_msg);
                     if (typeof t_msg.message == 'string') {
                         t_msg.message = JSON.parse(t_msg.message);
                     }
+                    if (t_msg.position === undefined) {
+                        msgs_o.proof = t_msg.purchase_proof;
+                    }
                     if (t_msg.message.n.length > 0) {
                         console.log(`nft address supplied!`);
-                        messages.push(
+                        msgs_o.messages.push(
                             <div className="d-flex align-items-center justify-content-between mt-3" key={msg}>
                                 <span>
                                     {t_msg.position}
@@ -2240,7 +2301,7 @@ class WalletHome extends React.Component {
                         );
                     } else if (t_msg.message.m.length > 0) {
                         console.log(`this is a direct message open ended`);
-                        messages.push(
+                        msgs_o.messages.push(
                             <div className="d-flex align-items-center mt-3" key={msg}>
                                 <span style={{color: '#0000004d'}}>
                                     {t_msg.position}
@@ -2260,7 +2321,7 @@ class WalletHome extends React.Component {
                             console.log(`there is a shipping object supplied!`);
                             try {
                                 console.log(`parsed the so`);
-                                messages.push(
+                                msgs_o.messages.push(
                                     <div key={msg}>
                                         <div>
                                             <span>
@@ -2333,7 +2394,7 @@ class WalletHome extends React.Component {
             console.error(err);
             console.error(`error at buyer_get_messages_by_offer_id`);
         }
-        return messages;
+        return msgs_o;
     }
 
     seller_reply_message = async (e, seller_name, offer_id, order_id, message, twm_api_url) => {
@@ -2488,7 +2549,7 @@ class WalletHome extends React.Component {
         return hexStr.toUpperCase();
     };
 
-    load_buyers_messages_for_selected_order = async (offerId, orderId) => {
+    load_buyers_messages_for_selected_order = async (offerId, orderId, pProof) => {
         const {api_url, twm_file: t_f} = this.state;
         if (!api_url || !offerId || !orderId || !t_f || !t_f.api || !t_f.api.urls) {
             return [];
@@ -3443,6 +3504,7 @@ class WalletHome extends React.Component {
         e.preventDefault();
         this.setState({
             showBuyerOrders: !this.state.showBuyerOrders,
+            buyer_purchase_proof: ''
         })
     };
 
@@ -4035,6 +4097,10 @@ class WalletHome extends React.Component {
                             <div className="d-flex align-items-center py-3"
                                  style={{width: '80%', margin: '0 auto', backgroundColor: 'white'}}>
                                 <form className="flex-row" id="search-form" action="" method="">
+                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
+                                        <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing
+                                            purchases. "Close Orders" to view products again. </span>
+                                    </ReactTooltip>
                                     <input
                                         style={{height: '30px', width: '300px', paddingLeft: '10px'}}
                                         type="text"
@@ -4052,8 +4118,22 @@ class WalletHome extends React.Component {
                                         {this.state.showBuyerOrders ? 'Close Orders' : 'My Orders'}
                                     </button>
                                     <AiOutlineInfoCircle className="ml-2" size={20} data-tip data-for='apiInfo'/>
-                                    <ReactTooltip id='apiInfo' type='info' effect='solid'>
-                                        <span>Click "Show Products" to load the most recent products, click "My Orders" to see your existing purchases. "Close Orders" to view products again.</span>
+
+                                </form>
+                                <form className="flex-row" id="search-items" action="" method="">
+                                    <input
+                                        name="searchProducts"
+                                        onChange={this.handleInputChange}
+                                        style={{height: '30px', width: '300px', paddingLeft: '10px'}}
+                                        type="text"
+                                        placeHolder="search by seller or keywords e.g. (samsung headphones)" />
+                                    <button type="button" onClick={this.load_searched_offers_from_api}
+                                            style={{padding: '1rem', lineHeight: 0}}
+                                            className={`search-button ml-3 search-button--green`}>
+                                        Search
+                                    </button>
+                                    <ReactTooltip id='searchInfo' type='info' effect='solid'>
+                                        <span>Type words you expect to see in a product listing separated by spaces, and they will display</span>
                                     </ReactTooltip>
                                 </form>
                             </div>
@@ -4066,7 +4146,7 @@ class WalletHome extends React.Component {
                                         borderBottom: '3px solid #d3d3d369'
                                     }} className="d-flex">
                                         <label style={{width: '200px'}}>Title</label>
-                                        <label style={{width: '100px'}}>Price (SFX)</label>
+                                        <label style={{width: '150px'}}>Price (SFX)</label>
                                         <label style={{width: '100px'}}>Quantity</label>
                                         <label style={{width: '120px'}}>Order ID</label>
                                         <label style={{width: '120px'}}>Offer ID</label>
@@ -4076,7 +4156,7 @@ class WalletHome extends React.Component {
                                         <div key={order.order_id} className="products-table-row d-flex">
                                             <div className="p-2" style={{width: '200px'}}>{order.title}</div>
                                             <div className="d-flex align-items-center"
-                                                 style={{width: '100px'}}>{order.price} <img width="20px"
+                                                 style={{width: '150px'}}>{order.price} <img width="20px"
                                                                                              className="ml-2"
                                                                                              src={sfxLogo}/></div>
                                             <div style={{width: '100px'}}>{order.quantity}</div>
@@ -4099,18 +4179,20 @@ class WalletHome extends React.Component {
                                             <div style={{width: '160px'}}>
                                                 <button style={{fontSize: '1.5rem'}} className="search-button"
                                                         type="button"
-                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id)}>
+                                                        onClick={() => this.handleBuyerMessages(order.offer_id, order.order_id, order)}>
                                                     Show Messages
                                                 </button>
                                             </div>
                                         </div>)}
 
                                     <MessagesModal
+                                        pProof={this.state.buyer_purchase_proof}
+                                        wOrder={this.state.orderData}
                                         isOpen={this.state.showBuyerMessages}
                                         apiUrl={this.state.api_url}
                                         closeFn={() => this.handleBuyerMessages()}
                                         sendFn={e => this.buyer_reply_by_order(e)}
-                                        refreshFn={() => this.load_buyers_messages_for_selected_order(this.state.buyerSelectOffer, this.state.buyerSelectOrder)}
+                                        refreshFn={() => this.load_buyers_messages_for_selected_order(this.state.buyer_purchase_proof, this.state.buyerSelectOffer, this.state.buyerSelectOrder)}
                                         messages={this.renderBuyerMessages()}
                                         orderId={this.state.buyerSelectOrder}
                                         offerId={this.state.buyerSelectOffer}

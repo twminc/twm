@@ -2,13 +2,23 @@ import React from "react";
 import ReactModal from "react-modal";
 import {CgClose} from "react-icons/cg";
 import {get_offer_by_id} from "../../utils/twm_actions";
+import sfxLogo from "../../img/sfx.svg";
 
 export default class MessagesModal extends React.Component {
     constructor(props) {
         super(props)
 
         this.state = {
-            offer: {}
+            offer: {
+                username: ''
+            },
+            purchase_proof: '',
+            order_info: {
+                quantity: 0,
+                price: 0,
+                title: '',
+                seller: ''
+            }
         }
     }
 
@@ -17,7 +27,7 @@ export default class MessagesModal extends React.Component {
             if (this.props.offerId && this.props.offerId !== prevProps.offerId) {
                 const offer = await get_offer_by_id(this.props.offerId, this.props.apiUrl);
                 if (offer.offer) {
-                    return this.setState({offer: offer.offer});
+                    return this.setState({offer: offer.offer, order_info: this.props.wOrder});
                 }
             }
         } catch (err) {
@@ -26,8 +36,8 @@ export default class MessagesModal extends React.Component {
     }
 
     render() {
-        const {isOpen, closeFn, orderId, refreshFn, sendFn, messages, offerId, seller, title, price, quantity} = this.props;
-
+        const {buyer_purchase_proof, isOpen, closeFn, orderId, refreshFn, sendFn, messages, offerId, seller, title, price, wOrder} = this.props;
+        console.log(buyer_purchase_proof);
         return (
             <ReactModal
                 isOpen={isOpen}
@@ -73,20 +83,26 @@ export default class MessagesModal extends React.Component {
                                 <span className="ml-2">{orderId}</span>
                             </div>
                             <div className="d-flex">
+                                <label>Purchase Proof:</label>
+                                <span className="ml-2">{messages.proof}</span>
+                            </div>
+                            <div className="d-flex">
                                 <label>Seller:</label>
-                                <span className="ml-2">{seller}</span>
+                                <span className="ml-2">{this.state.offer.username}</span>
                             </div>
                             <div className="d-flex">
                                 <label>Title:</label>
-                                <span className="ml-2">{title}</span>
+                                <span className="ml-2">{this.state.order_info.title}</span>
                             </div>
                             <div className="d-flex">
                                 <label>Quantity:</label>
-                                <span className="ml-2">{quantity}</span>
+                                <span className="ml-2">{this.state.order_info.quantity}</span>
                             </div>
                             <div className="d-flex">
                                 <label>Price:</label>
-                                <span className="ml-2">{price / 10000000000} SFX</span>
+                                <span className="ml-2">{this.state.order_info.price} SFX <img width="20px"
+                                                                                             className="ml-2"
+                                                                                             src={sfxLogo}/></span>
                             </div>
                         </div>
 
@@ -96,7 +112,7 @@ export default class MessagesModal extends React.Component {
                                 <button onClick={refreshFn}>Refresh Messages</button>
                             </div>
                             <div style={{height: "340px", overflow: "overlay", marginTop: "10px"}}>
-                                {messages}
+                                {messages.messages}
                             </div>
                         </div>
                         <form onSubmit={e => sendFn(e)}>
