@@ -8,7 +8,8 @@ export default class History extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            txn_history_table_data_state: []
+            txn_history_table_data_state: [],
+            loading_hist: true
         };
 
 
@@ -142,8 +143,6 @@ export default class History extends React.Component {
                     }
 
                     if (the_vin.script == true) {
-                        console.log(txn);
-                        console.log(tx_json);
                         let the_true_fee = txn.fee / 10000000000;
                         if (the_true_fee > 100) {
                             the_true_fee = 0;
@@ -192,6 +191,57 @@ export default class History extends React.Component {
                         </tr>
                     )
                 }
+            } else if (the_type === 'stake') {
+                try {
+
+                    let gst_obj = {};
+                    gst_obj.daemon_host = this.props.daemon_host;
+                    gst_obj.daemon_port = this.props.daemon_port;
+                    let the_tx = await get_transactions(gst_obj, txn.id);
+
+                    let tx_json = JSON.parse(the_tx.txs[0].as_json);
+                    console.log(tx_json);
+                    console.log(txn);
+
+                    let staked_tokens = 0;
+
+                    for (const the_os of tx_json.vout) {
+                        if (the_os.target.script) {
+                            console.log(the_os);
+                            staked_tokens = the_os.token_amount;
+                        }
+                    }
+                    load_out.push(
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{`${staked_tokens / 10000000000} SFT`}</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+
+                } catch(err) {
+                    load_out.push(
+                        <tr className="tx-row" key={key}>
+                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                            <td>{txn.id}</td>
+                            <td>{txn.direction}</td>
+                            <td>{txn.pending}</td>
+                            <td className="">{the_type}</td>
+                            <td>{`${0 / 10000000000} SFT`}</td>
+                            <td>{txn.fee / 10000000000}</td>
+                            <td>{txn.blockHeight}</td>
+                            <td>{txn.confirmations}</td>
+                        </tr>
+                    )
+                    console.error(err);
+                    console.error(`error at the fetch at the stake txs`);
+                }
             } else {
                 load_out.push(
                     <tr className="tx-row" key={key}>
@@ -208,7 +258,7 @@ export default class History extends React.Component {
                 )
             }
         }
-        this.setState({txn_history_table_data_state: load_out});
+        this.setState({txn_history_table_data_state: load_out, loading_hist: false});
     }
 
     render() {
@@ -216,7 +266,6 @@ export default class History extends React.Component {
 
         return (
             <div className="settings-table-wrapper">
-                <button onClick={this.load_all}>load history</button>
                 <Table>
                     <thead style={{border: '1px solid lightgray'}}>
                     <tr>
@@ -233,7 +282,7 @@ export default class History extends React.Component {
                     </thead>
 
                     <tbody>
-                    {this.state.txn_history_table_data_state}
+                    {this.state.loading_hist ? 'Loading History...' : this.state.txn_history_table_data_state}
                     </tbody>
                 </Table>
             </div>
