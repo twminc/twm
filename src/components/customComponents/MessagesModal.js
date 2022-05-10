@@ -13,6 +13,7 @@ export default class MessagesModal extends React.Component {
                 username: ''
             },
             purchase_proof: '',
+            messages: [],
             order_info: {
                 quantity: 0,
                 price: 0,
@@ -36,7 +37,16 @@ export default class MessagesModal extends React.Component {
     }
 
     load_datas = () => {
-        this.setState({order_info: this.props.wOrder});
+        if (this.props.messages.proof) {
+
+            this.setState({order_info: this.props.wOrder, purchase_proof: this.props.messages.proof});
+        } else {
+
+            this.setState({order_info: this.props.wOrder});
+        }
+        if (this.props.messages.messages) {
+            this.setState({messages: this.props.messages.messages});
+        }
     }
 
 
@@ -91,7 +101,7 @@ export default class MessagesModal extends React.Component {
                             </div>
                             <div className="d-flex">
                                 <label>Purchase Proof:</label>
-                                <span className="ml-2">{messages.proof}</span>
+                                <span className="ml-2">{this.state.purchase_proof}</span>
                             </div>
                             <div className="d-flex">
                                 <label>Seller:</label>
@@ -119,7 +129,7 @@ export default class MessagesModal extends React.Component {
                                 <button onClick={refreshFn}>Refresh Messages</button>
                             </div>
                             <div style={{height: "340px", overflow: "overlay", marginTop: "10px"}}>
-                                {messages.messages}
+                                {this.state.messages}
                             </div>
                         </div>
                         <form onSubmit={e => sendFn(e)}>

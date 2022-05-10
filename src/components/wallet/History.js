@@ -28,10 +28,6 @@ export default class History extends React.Component {
         for (const [key, txn] of this.props.txnhistory.entries()) {
 
             let the_type = '';
-            if (txn.transactionType == 1 & txn.amount > 0) {
-                txn.transactionType = 4;
-                txn.amount = 0;
-            }
             switch (txn.transactionType) {
                 case 0: {
                     console.log(`sfx txn`);
@@ -48,6 +44,7 @@ export default class History extends React.Component {
                 }
                 case 3: {
                     the_type = 'stake';
+                    console.log(txn);
                     break;
                 }
                 case 4: {
@@ -91,7 +88,6 @@ export default class History extends React.Component {
                     the_type = 'update oracle';
                     break;
                 }
-
             }
 
 
@@ -125,33 +121,61 @@ export default class History extends React.Component {
                         </tr>
                     )
                 }
-
-            } else if (the_type == 'unstake') {
+            } else if (the_type == 'sft' || the_type == 'unstake') {
                 try {
-
                     let gst_obj = {};
                     gst_obj.daemon_host = this.props.daemon_host;
                     gst_obj.daemon_port = this.props.daemon_port;
                     let the_tx = await get_transactions(gst_obj, txn.id);
-                    console.log(the_tx.txs[0].as_json);
 
                     let tx_json = JSON.parse(the_tx.txs[0].as_json);
-                    console.log(tx_json.vin[0].script);
 
+                    let the_vin = {};
+                    the_vin.token_amount = 0;
+                    the_vin.amount = 0;
+                    the_vin.script = false;
+                    for (const the_ins of tx_json.vin) {
+                        if (the_ins.script) {
+                            the_vin = the_ins.script;
+                            the_vin.script = true;
+                        }
+                    }
 
-                    load_out.push(
-                        <tr className="tx-row" key={key}>
-                            <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
-                            <td>{txn.id}</td>
-                            <td>{txn.direction}</td>
-                            <td>{txn.pending}</td>
-                            <td className="">{the_type}</td>
-                            <td>{(tx_json.vin[0].script.token_amount / 10000000000)} SFT + {tx_json.vin[0].script.amount / 10000000000} SFX</td>
-                            <td>{txn.fee / 10000000000}</td>
-                            <td>{txn.blockHeight}</td>
-                            <td>{txn.confirmations}</td>
-                        </tr>
-                    )
+                    if (the_vin.script == true) {
+                        console.log(txn);
+                        console.log(tx_json);
+                        let the_true_fee = txn.fee / 10000000000;
+                        if (the_true_fee > 100) {
+                            the_true_fee = 0;
+                        }
+                        load_out.push(
+                            <tr className="tx-row" key={key}>
+                                <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                                <td>{txn.id}</td>
+                                <td>{txn.direction}</td>
+                                <td>{txn.pending}</td>
+                                <td className="">{'unstake'}</td>
+                                <td>{(the_vin.token_amount / 10000000000)} SFT + {the_vin.amount / 10000000000} SFX</td>
+                                <td>{the_true_fee}</td>
+                                <td>{txn.blockHeight}</td>
+                                <td>{txn.confirmations}</td>
+                            </tr>
+                        )
+                    } else {
+                        load_out.push(
+                            <tr className="tx-row" key={key}>
+                                <td>{new Date(txn.timestamp * 1000).toLocaleString()}</td>
+                                <td>{txn.id}</td>
+                                <td>{txn.direction}</td>
+                                <td>{txn.pending}</td>
+                                <td className="">{the_type}</td>
+                                <td>{txn.tokenAmount > 0 ? (`${txn.tokenAmount / 10000000000} SFT`) : (`${txn.amount / 10000000000} SFX`)}</td>
+                                <td>{txn.fee / 10000000000}</td>
+                                <td>{txn.blockHeight}</td>
+                                <td>{txn.confirmations}</td>
+                            </tr>
+                        )
+                    }
                 } catch (err) {
                     console.error(err);
                     load_out.push(
@@ -168,7 +192,6 @@ export default class History extends React.Component {
                         </tr>
                     )
                 }
-
             } else {
                 load_out.push(
                     <tr className="tx-row" key={key}>
@@ -184,10 +207,7 @@ export default class History extends React.Component {
                     </tr>
                 )
             }
-
         }
-
-
         this.setState({txn_history_table_data_state: load_out});
     }
 
