@@ -975,6 +975,10 @@ class WalletHome extends React.Component {
         }
     };
 
+    handleKeyDown = (e) => {
+        e.preventDefault();
+    };
+
     load_searched_offers_from_api = async (e) => {
         e.preventDefault();
         this.show_loading(`loading products from your search`);
@@ -4121,14 +4125,14 @@ class WalletHome extends React.Component {
                                     <AiOutlineInfoCircle className="ml-2" size={20} data-tip data-for='apiInfo'/>
 
                                 </form>
-                                <form className="flex-row" id="search-items" action="" method="">
+                                <form className="flex-row" id="search-items" action="" method="" onSubmit={this.load_searched_offers_from_api}>
                                     <input
                                         name="searchProducts"
                                         onChange={this.handleInputChange}
                                         style={{height: '30px', width: '300px', paddingLeft: '10px'}}
                                         type="text"
-                                        placeHolder="search by seller or keywords e.g. (samsung headphones)" />
-                                    <button type="button" onClick={this.load_searched_offers_from_api}
+                                        placeholder="search by seller or keywords e.g. (samsung headphones)" />
+                                    <button type="button"
                                             style={{padding: '1rem', lineHeight: 0}}
                                             className={`search-button ml-3 search-button--green`}>
                                         Search
