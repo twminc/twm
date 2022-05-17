@@ -2,7 +2,7 @@ import React from 'react';
 
 import './ComponentCSS/MerchantAccounts.css'
 import './ComponentCSS/StakingTable.css'
-import MessagesModal from './MessagesModal';
+import MerchantMessagesModal from "./MerchantMessagesModal";
 
 export default class MerchantOffers extends React.Component {
     constructor(props) {
@@ -283,7 +283,7 @@ export default class MerchantOffers extends React.Component {
         return (
             <div>
                 <div style={{padding: '20px', maxHeight: '800px', height: '50vh', overflowY: 'scroll'}}>{the_view}</div>
-                <MessagesModal
+                <MerchantMessagesModal
                     apiUrl={this.props.apiUrl}
                     isOpen={!!this.state.selected_order}
                     closeFn={() => this.setState({selected_order: '', selected_messages: null})}
