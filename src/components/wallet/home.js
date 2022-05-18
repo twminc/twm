@@ -980,7 +980,6 @@ class WalletHome extends React.Component {
     };
 
     load_searched_offers_from_api = async (e) => {
-        e.preventDefault();
         this.show_loading(`loading products from your search`);
         try {
             console.log(this.state.api_url);
