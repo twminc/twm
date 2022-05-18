@@ -4132,7 +4132,7 @@ class WalletHome extends React.Component {
                                         style={{height: '30px', width: '300px', paddingLeft: '10px'}}
                                         type="text"
                                         placeholder="search by seller or keywords e.g. (samsung headphones)" />
-                                    <button type="button"
+                                    <button type="submit"
                                             style={{padding: '1rem', lineHeight: 0}}
                                             className={`search-button ml-3 search-button--green`}>
                                         Search
